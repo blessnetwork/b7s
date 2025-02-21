@@ -14,10 +14,10 @@ You can install b7s using either curl or wget:
 
 ```bash
 # using curl
-sudo sh -c "curl https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh | bash"
+sudo sh -c "curl https://raw.githubusercontent.com/blessnetwork/b7s/main/download.sh | bash"
 
 # using wget
-sudo sh -c "wget https://raw.githubusercontent.com/blocklessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
+sudo sh -c "wget https://raw.githubusercontent.com/blessnetwork/b7s/main/download.sh -v -O download.sh; chmod +x download.sh; ./download.sh; rm -rf download.sh"
 ```
 
 You can also use Docker to install b7s. See the [Docker documentation](/docker/README.md) for more information.
@@ -87,8 +87,8 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 
 b7s depends on the following repositories:
 
-- blocklessnetwork/runtime
-- blocklessnetwork/orchestration-chain
+- blessnetwork/runtime
+- blessnetwork/orchestration-chain
 
 ## Contributing
 
