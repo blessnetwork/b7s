@@ -10,8 +10,8 @@ RUN apt-get update && \
 RUN curl -o ./gomplate -sSL https://github.com/hairyhenderson/gomplate/releases/download/v3.10.0/gomplate_linux-amd64
 RUN chmod 755 gomplate
 
-# get the runtime
-RUN curl -o ./runtime.tar.gz -sSL https://github.com/blocklessnetwork/runtime/releases/download/v0.3.5/blockless-runtime.ubuntu-20.04.x86_64.tar.gz
+RUN curl -o ./runtime.tar.gz -sSL https://github.com/blessnetwork/bls-runtime/releases/download/v0.6.4/blockless-runtime.linux-latest.x86_64.tar.gz
+
 RUN mkdir /app/runtime && tar -xvkf ./runtime.tar.gz -C /app/runtime
 
 # install blockchain client
