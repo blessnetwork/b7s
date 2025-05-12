@@ -135,7 +135,7 @@ func (f *FStore) checkFunctionFiles(fn bls.FunctionRecord) (bool, bool, error) {
 		return false, false, fmt.Errorf("could not stat function archive: %w", err)
 	}
 
-	// NOTE: We could check that it's a regular file (plus cheksum), but lets not go overboard for now.
+	// NOTE: We could check that it's a regular file (plus checksum), but lets not go overboard for now.
 
 	// Check if the files are found.
 	filesFound := true
