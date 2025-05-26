@@ -11,7 +11,7 @@ In short, Worker Nodes are nodes that will be doing the actual execution of work
 Worker Nodes do this by relying on the Bless Runtime.
 Bless Runtime needs to be available locally on the machine where the Node is run.
 
-Head Nodes are nodes that are performing coordination of work between a number of Worker Nodes.
+Head Nodes are nodes that coordinate work between a number of Worker Nodes.
 When a Head Node receives an execution request to execute a piece of work (a Bless Function), it will start a process of finding a Worker Node most suited to do this work.
 Head Node does not need to have access to Bless Runtime.
 
