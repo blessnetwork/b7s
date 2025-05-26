@@ -88,6 +88,16 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 | enable-metrics            | N/A        | false                   | Enable metrics.                                                                         |
 | prometheus-address        | N/A        | N/A                     | Address where node should serve metrics (for head node this is the REST API address)    |
 
+
+
+## Private Key and Node Identity
+
+A Node is known by its Peer ID.
+Peer ID is an identifier that uniquely identifies a node in the network.
+Peer ID is derived from the nodes private key.
+
+To generate a private key for the node, use [keyforge](/cmd/keyforge/README.md).
+
 ## Dependencies
 
 b7s depends on the following repositories:
