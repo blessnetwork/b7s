@@ -26,6 +26,8 @@ func (h *HeadNode) process(ctx context.Context, from peer.ID, msg string, payloa
 		return node.HandleMessage(ctx, from, payload, h.processWorkOrderResponse)
 	case bls.MessageFormClusterResponse:
 		return node.HandleMessage(ctx, from, payload, h.processFormClusterResponse)
+	case bls.MessageExecuteBatch:
+		return node.HandleMessage(ctx, from, payload, h.processExecuteBatch)
 	}
 
 	return fmt.Errorf("unsupported message: %s", msg)

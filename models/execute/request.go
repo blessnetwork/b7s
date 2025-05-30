@@ -8,10 +8,10 @@ import (
 
 // Request describes an execution request.
 type Request struct {
-	FunctionID string      `json:"function_id"`
-	Method     string      `json:"method"`
-	Parameters []Parameter `json:"parameters,omitempty"`
-	Config     Config      `json:"config"`
+	FunctionID string   `json:"function_id"`
+	Method     string   `json:"method"`
+	Arguments  []string `json:"arguments,omitempty"`
+	Config     Config   `json:"config"`
 
 	// Optional signature of the request.
 	Signature string `json:"signature,omitempty"`

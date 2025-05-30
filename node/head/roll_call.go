@@ -4,32 +4,35 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
+	"github.com/blessnetwork/b7s/consensus"
 	cons "github.com/blessnetwork/b7s/consensus"
 	"github.com/blessnetwork/b7s/consensus/pbft"
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
 )
 
 func (h *HeadNode) executeRollCall(
 	ctx context.Context,
-	requestID string,
-	req request.Execute,
-	consensus cons.Type,
+	rc *request.RollCall,
+	topic string,
+	nodeCount int,
 ) ([]peer.ID, error) {
+
+	requestID := rc.RequestID
 
 	// Create a logger with relevant context.
 	log := h.Log().With().
 		Str("request", requestID).
-		Str("function", req.FunctionID).
-		Int("node_count", req.Config.NodeCount).
-		Str("topic", req.Topic).
+		Str("function", rc.FunctionID).
+		Int("node_count", nodeCount).
+		Str("topic", topic).
 		Logger()
 
 	log.Info().Msg("performing roll call for request")
@@ -37,7 +40,7 @@ func (h *HeadNode) executeRollCall(
 	h.rollCall.create(requestID)
 	defer h.rollCall.remove(requestID)
 
-	err := h.publishRollCall(ctx, req.RollCall(requestID, consensus), req.Topic)
+	err := h.publishRollCall(ctx, rc, topic)
 	if err != nil {
 		return nil, fmt.Errorf("could not publish roll call: %w", err)
 	}
@@ -45,14 +48,6 @@ func (h *HeadNode) executeRollCall(
 	log.Info().Msg("roll call published")
 
 	// Limit for how long we wait for responses.
-	t := cmp.Or(
-		time.Duration(req.Config.Timeout)*time.Second,
-		h.cfg.RollCallTimeout,
-	)
-	tctx, cancel := context.WithTimeout(ctx, t)
-	defer cancel()
-
-	nodeCount := req.Config.NodeCount
 
 	// Peers that have reported on roll call.
 	var reportingPeers []peer.ID
@@ -61,7 +56,7 @@ rollCallResponseLoop:
 		// Wait for responses from nodes who want to work on the request.
 		select {
 		// Request timed out.
-		case <-tctx.Done():
+		case <-ctx.Done():
 
 			// -1 means we'll take any peers reporting
 			if len(reportingPeers) >= 1 && nodeCount == -1 {
@@ -75,7 +70,7 @@ rollCallResponseLoop:
 		case reply := <-h.rollCall.responses(requestID):
 
 			// Check if this is the reply we want - shouldn't really happen.
-			if reply.FunctionID != req.FunctionID {
+			if reply.FunctionID != rc.FunctionID {
 				log.Info().
 					Stringer("peer", reply.From).
 					Str("function_got", reply.FunctionID).
@@ -104,7 +99,7 @@ rollCallResponseLoop:
 		}
 	}
 
-	if consensus == cons.PBFT && len(reportingPeers) < pbft.MinimumReplicaCount {
+	if rc.Consensus == cons.PBFT && len(reportingPeers) < pbft.MinimumReplicaCount {
 		return nil, fmt.Errorf("not enough peers reported for PBFT consensus (have: %v, need: %v)", len(reportingPeers), pbft.MinimumReplicaCount)
 	}
 
@@ -162,4 +157,14 @@ func (h *HeadNode) processRollCallResponse(ctx context.Context, from peer.ID, re
 	h.rollCall.add(res.RequestID, rres)
 
 	return nil
+}
+
+func rollCallRequest(req execute.Request, id string, c consensus.Type) *request.RollCall {
+	return &request.RollCall{
+		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
+		RequestID:   id,
+		FunctionID:  req.FunctionID,
+		Consensus:   c,
+		Attributes:  req.Config.Attributes,
+	}
 }

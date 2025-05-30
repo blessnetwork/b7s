@@ -85,11 +85,11 @@ func TestExecutor_Execute(t *testing.T) {
 	req := execute.Request{
 		FunctionID: functionID,
 		Method:     path.Base(testFunction),
-		Parameters: []execute.Parameter{
-			{Value: "--chunk"},
-			{Value: fmt.Sprintf("%v", chunkSize)},
-			{Value: "--file"},
-			{Value: filepath.Base(testfile)}, // Specify name only because the path is relative to FS root.
+		Arguments: []string{
+			"--chunk",
+			fmt.Sprintf("%v", chunkSize),
+			"--file",
+			filepath.Base(testfile), // Specify name only because the path is relative to FS root.
 		},
 	}
 

@@ -13,11 +13,9 @@ func TestRequestExecute_Signing(t *testing.T) {
 	sampleReq := Request{
 		FunctionID: "function-di",
 		Method:     "method-value",
-		Parameters: []Parameter{
-			{
-				Name:  "parameter-name",
-				Value: "parameter-value",
-			},
+		Arguments: []string{
+			"parameter-value-1",
+			"parameter-value-2",
 		},
 		Config: Config{},
 	}
