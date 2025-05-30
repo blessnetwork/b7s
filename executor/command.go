@@ -33,14 +33,9 @@ func (e *Executor) createCmd(paths requestPaths, req execute.Request) *exec.Cmd 
 
 	// Separate runtime arguments from the function arguments.
 	args = append(args, "--")
+	args = append(args, req.Arguments...)
 
 	// Function arguments.
-	for _, param := range req.Parameters {
-		if param.Value != "" {
-			args = append(args, param.Value)
-		}
-	}
-
 	cmd := exec.Command(exePath, args...)
 	cmd.Dir = paths.workdir
 

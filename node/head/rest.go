@@ -9,6 +9,7 @@ import (
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 // ExecuteFunction can be used to start function execution. At the moment this is used by the API server to start execution on the head node.
@@ -22,6 +23,30 @@ func (h *HeadNode) ExecuteFunction(ctx context.Context, req execute.Request, sub
 	}
 
 	return code, requestID, results, cluster, nil
+}
+
+func (h *HeadNode) ExecuteFunctionBatch(ctx context.Context, req request.ExecuteBatch) (*response.ExecuteBatch, error) {
+
+	requestID := newRequestID()
+
+	log := h.Log().With().
+		Str("request", requestID).
+		Str("function", req.Template.FunctionID).
+		Int("size", len(req.Arguments)).Logger()
+
+	log.Info().Msg("processing batch execution request via API")
+
+	results, err := h.executeBatch(ctx, requestID, req)
+	if err != nil {
+		return nil, fmt.Errorf("could not execute batch request: %w", err)
+	}
+
+	log.Info().Any("results", results).Msg("received batch responses")
+
+	// TODO: Add actual status code.
+	res := req.Response(codes.OK, requestID).WithResults(results)
+
+	return res, nil
 }
 
 // ExecutionResult fetches the execution result from the node cache.

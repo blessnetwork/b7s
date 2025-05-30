@@ -25,6 +25,8 @@ func (w *Worker) process(ctx context.Context, from peer.ID, msg string, payload 
 		return node.HandleMessage(ctx, from, payload, w.processFormCluster)
 	case bls.MessageDisbandCluster:
 		return node.HandleMessage(ctx, from, payload, w.processDisbandCluster)
+	case bls.MessageWorkOrderBatch:
+		return node.HandleMessage(ctx, from, payload, w.processWorkOrderBatch)
 	}
 
 	return fmt.Errorf("unsupported message: %s", msg)

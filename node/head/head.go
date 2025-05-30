@@ -19,14 +19,15 @@ type HeadNode struct {
 
 	cfg Config
 
-	rollCall           *rollCallQueue
-	consensusResponses *waitmap.WaitMap[string, response.FormCluster]
-	workOrderResponses *waitmap.WaitMap[string, execute.NodeResult]
+	rollCall                *rollCallQueue
+	consensusResponses      *waitmap.WaitMap[string, response.FormCluster]
+	workOrderResponses      *waitmap.WaitMap[string, execute.NodeResult]
+	workOrderBatchResponses *waitmap.WaitMap[string, response.WorkOrderBatch]
 }
 
 func New(core node.Core, options ...Option) (*HeadNode, error) {
 
-	// Initialize config.
+	// InitiaStrandResultsize config.
 	cfg := DefaultConfig
 	for _, option := range options {
 		option(&cfg)
@@ -41,9 +42,10 @@ func New(core node.Core, options ...Option) (*HeadNode, error) {
 		Core: core,
 		cfg:  cfg,
 
-		rollCall:           newQueue(rollCallQueueBufferSize),
-		consensusResponses: waitmap.New[string, response.FormCluster](0),
-		workOrderResponses: waitmap.New[string, execute.NodeResult](executionResultCacheSize),
+		rollCall:                newQueue(rollCallQueueBufferSize),
+		consensusResponses:      waitmap.New[string, response.FormCluster](0),
+		workOrderResponses:      waitmap.New[string, execute.NodeResult](executionResultCacheSize),
+		workOrderBatchResponses: waitmap.New[string, response.WorkOrderBatch](executionResultCacheSize),
 	}
 
 	head.Metrics().SetGaugeWithLabels(node.NodeInfoMetric, 1,
@@ -61,5 +63,9 @@ func (h *HeadNode) Run(ctx context.Context) error {
 }
 
 func newRequestID() string {
+	return newUUID()
+}
+
+func newUUID() string {
 	return uuid.New().String()
 }

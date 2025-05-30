@@ -26,8 +26,18 @@ func (a *API) ExecuteFunction(ctx echo.Context) error {
 		Config:     req.Config,
 		FunctionID: req.FunctionId,
 		Method:     req.Method,
-		Parameters: req.Parameters,
+		// TODO: Init arguments here, update API models.
 	}
+
+	var args []string
+
+	// Maintain backwards compatibility - if someone provided function arguments via the `parameters` field.
+	if len(req.Parameters) > 0 {
+		for _, p := range req.Parameters {
+			args = append(args, p.Value)
+		}
+	}
+	exr.Arguments = args
 
 	err = exr.Valid()
 	if err != nil {

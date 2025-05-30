@@ -99,7 +99,7 @@ func (r *Replica) execute(ctx context.Context, view uint, sequence uint, digest 
 		Result:   res,
 		Metadata: metadata,
 		PBFT: execute.PBFTResultInfo{
-			View:             r.view,
+			View:             &r.view,
 			RequestTimestamp: request.Timestamp,
 			Replica:          r.id,
 		},
