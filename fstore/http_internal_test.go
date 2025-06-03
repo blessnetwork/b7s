@@ -85,7 +85,7 @@ func TestFunction_GetJSONHandlesErrors(t *testing.T) {
 			name: "handles unexpected format",
 
 			statusCode: http.StatusOK,
-			// Valid JSON payload but wrong format - number instead of a textual fiel.d
+			// Valid JSON payload but wrong format - number instead of a textual field.	
 			payload: []byte(`{
 				"id":"generic-id",
 				"name":"generic-name",
