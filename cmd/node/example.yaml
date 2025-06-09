@@ -4,20 +4,20 @@
 # how many requests should the node process in parallel
 # concurrency: 10
 
-# directory where node will keep files needed for operation
-# workspace: workspace
-
-# directory where node will maintain its database
-# db: db
-
 # multiaddresses of nodes this node will try to connect to on boot
 # boot-nodes: []
+
+# directory where node will keep files needed for operation
+# workspace: workspace
 
 # should the node load its attributes from IPFS/IPNS
 # load-attributes: false
 
 # topics this node should subscribe to
 # topics: []
+
+# directory where node will maintain its database
+# db: db
 
 # log information
 # log:
@@ -55,7 +55,7 @@
   # must-reach-dialback-peers: false
 
   # try to maintain as many connections as possible (useful for head nodes that need to be connected to many workers)
-  # disablle-connection-limits: false
+  # disable-connection-limits: false
 
   # number of connections node will aim to have
   # connection-count: 512
