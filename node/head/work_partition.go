@@ -2,7 +2,6 @@ package head
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 
@@ -13,9 +12,9 @@ import (
 // and splits them among a number of workers.
 //
 // In the future, we may have different criteria for what gets assigned to each peer. Right now we do round robin.
-func partitionWorkBatch(peers []peer.ID, req request.ExecuteBatch) {
+func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBatch) map[peer.ID]*request.WorkOrderBatch {
 
-	variants := getArgumentsVariants(req)
+	variants := req.Arguments
 
 	// Assign arguments to a list of peers in a round robin fashion
 	n := len(peers)
@@ -26,20 +25,16 @@ func partitionWorkBatch(peers []peer.ID, req request.ExecuteBatch) {
 		a[target] = append(a[target], args)
 	}
 
-	for peer, variants := range a {
-		fmt.Printf("%s\n", peer.String())
-		for _, args := range variants {
-			fmt.Printf("\t%s\n", strings.Join(args, " "))
-		}
+	assignments := make(map[peer.ID]*request.WorkOrderBatch)
+	for _, peer := range peers {
+
+		strandID := newStrandID(requestID)
+		assignments[peer] = req.WorkOrderBatch(strandID, a[peer]...)
 	}
+
+	return assignments
 }
 
-func getArgumentsVariants(req request.ExecuteBatch) [][]string {
-
-	// Create a full list of arguments - template + variants.
-	variants := make([][]string, len(req.Arguments)+1)
-	copy(variants[0], req.Template.Arguments)
-	copy(variants[1:], req.Arguments)
-
-	return variants
+func newStrandID(requestID string) string {
+	return fmt.Sprintf("%v-%v", requestID, newRequestID())
 }

@@ -23,8 +23,10 @@ const (
 	MessageFormClusterResponse     = "MsgFormClusterResponse"
 	MessageDisbandCluster          = "MsgDisbandCluster"
 
-	MessageExecuteBatch   = "MsgExecuteBatch"
-	MessageWorkOrderBatch = "MsgWorkOrderBatch"
+	MessageExecuteBatch           = "MsgExecuteBatch"
+	MessageExecuteBatchResponse   = "MsgExecuteBatchResponse"
+	MessageWorkOrderBatch         = "MsgWorkOrderBatch"
+	MessageWorkOrderBatchResponse = "MsgWorkOrderBatchResponse"
 )
 
 type TraceableMessage interface {

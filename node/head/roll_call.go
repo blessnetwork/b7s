@@ -159,12 +159,13 @@ func (h *HeadNode) processRollCallResponse(ctx context.Context, from peer.ID, re
 	return nil
 }
 
-func rollCallRequest(req execute.Request, id string, c consensus.Type) *request.RollCall {
+// TODO: RollCall must have trace info propagated.
+func rollCallRequest(function string, id string, c consensus.Type, attributes *execute.Attributes) *request.RollCall {
 	return &request.RollCall{
-		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
-		RequestID:   id,
-		FunctionID:  req.FunctionID,
-		Consensus:   c,
-		Attributes:  req.Config.Attributes,
+		// BaseMessage: bls.BaseMessage{TraceInfo: req.TraceInfo},
+		RequestID:  id,
+		FunctionID: function,
+		Consensus:  c,
+		Attributes: attributes,
 	}
 }

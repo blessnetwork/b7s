@@ -61,5 +61,9 @@ func (h *HeadNode) Run(ctx context.Context) error {
 }
 
 func newRequestID() string {
+	return newUUID()
+}
+
+func newUUID() string {
 	return uuid.New().String()
 }

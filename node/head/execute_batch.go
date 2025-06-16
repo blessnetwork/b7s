@@ -2,13 +2,24 @@ package head
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/rs/zerolog"
 
+	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/request"
 )
 
+type ExecutionBatchAssignments map[peer.ID]*request.WorkOrderBatch
+
+// NOTE: Batch execution is a special case of an execution. Instead of issuing an execution request/work order
+// to nodes to execute a single thing (naturally one function with a set of arguments) we want to
+// task many nodes to execute one function with a large number of arguments.
+//
+// Since it's still unclear if this is here to stay and/or if it becomes a canon method of execution in b7s,
+// in order to not alter the default way of execution, this use case is handled separately, even though there are big overlaps.
 func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req request.ExecuteBatch) error {
 
 	requestID := newRequestID()
@@ -16,13 +27,22 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 	log := h.Log().With().
 		Stringer("peer", from).
 		Str("request", requestID).
-		Str("function", req.Template.FunctionID).Logger()
+		Str("function", req.Template.FunctionID).
+		Int("size", len(req.Arguments)).Logger()
 
-	h.executeBatch(ctx, requestID, req)
+	log.Info().Msg("received a batch request")
 
+	err := h.executeBatch(ctx, requestID, req)
+	if err != nil {
+		return fmt.Errorf("could not execute batch request: %w", err)
+	}
+
+	// TODO: Send the response back.
+
+	return nil
 }
 
-func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) {
+func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) error {
 
 	// TODO: Metrics and tracing
 
@@ -35,11 +55,61 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 		Int("batch_size", size).
 		Logger()
 
-	peers, err := h.executeRollCall(ctx, requestID, req., 0)
+	log.Info().Msg("processing batch execution request")
+
+	// Phase 1. - Issue roll call to nodes.
+
+	rc := rollCallRequest(req.Template.FunctionID, requestID, 0, req.Template.Config.Attributes)
+
+	// node count is -1 - we want all the nodes that want to work.
+	peers, err := h.executeRollCall(ctx, rc, req.Topic, -1)
 	if err != nil {
 		return fmt.Errorf("could not execute roll call: %w", err)
 	}
 
+	log.Debug().
+		Strs("peers", bls.PeerIDsToStr(peers)).
+		Msg("peers reported for work")
+
+	assignments := partitionWorkBatch(peers, requestID, req)
+
+	// TODO: Rethink, useful but ugly.
+	logAssignments(&log, assignments)
+
+	err = h.sendBatch(ctx, assignments)
+	if err != nil {
+
+		var sendErr *batchSendError
+		if errors.As(err, &sendErr) {
+			// TODO: Handle partial failures by retrying part of the batch that failed.
+			log.Warn().
+				Strs("peers", bls.PeerIDsToStr(sendErr.Targets())).
+				Msg("partial failure to send batch requst")
+		}
+
+		return fmt.Errorf("could not send work order batch: %w", err)
+	}
+
+	// Wait for results.
+	// TODO: Handle errors - reintroduce to the pool.
+
+	return nil
 }
 
+func logAssignments(log *zerolog.Logger, assignments map[peer.ID]*request.WorkOrderBatch) {
 
+	for peer, assignment := range assignments {
+		log.Debug().
+			Stringer("peer", peer).
+			Int("count", len(assignment.Arguments)).
+			Msg("work batch prepared for a peer")
+
+		for i, args := range assignment.Arguments {
+			log.Debug().
+				Stringer("peer", peer).
+				Int("i", i).
+				Strs("arguments", args).
+				Msg("work order variant")
+		}
+	}
+}
