@@ -10,6 +10,7 @@ type WorkOrderBatch struct {
 	bls.BaseMessage
 
 	Template  ExecutionRequestTemplate `json:"template,omitempty"`
+	RequestID string                   `json:"request_id,omitempty"`
 	StrandID  string                   `json:"strand_id,omitempty"`
 	Arguments [][]string               `json:"arguments,omitempty"`
 }
