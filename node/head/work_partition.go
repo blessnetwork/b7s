@@ -36,5 +36,5 @@ func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBa
 }
 
 func newStrandID(requestID string) string {
-	return fmt.Sprintf("%v-%v", requestID, newRequestID())
+	return fmt.Sprintf("%v:%v", requestID, newRequestID())
 }

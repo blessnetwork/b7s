@@ -4,15 +4,33 @@ import (
 	"encoding/json"
 
 	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/execute"
 )
 
 type WorkOrderBatch struct {
 	bls.BaseMessage
 
-	// TODO: TBD
+	// NOTE: Worker might not even need to be aware of the overarching request ID.
+	// It will help with debugging right now so let's leave it be.
+	RequestID string
+
+	// NOTE: We have redundancy here as strand ID is <request-id>:<uuid>.
+	// However, this might change too in the future.
+	StrandID string
+
+	Results StrandResults
 }
 
-func (WorkOrderBatch) Type() string { return bls.MessageWorkOrderResponse }
+type StrandResults map[execute.RequestHash]*StrandResult
+
+type StrandResult struct {
+	execute.NodeResult
+
+	FunctionInvocation string
+	Arguments          []string
+}
+
+func (WorkOrderBatch) Type() string { return bls.MessageWorkOrderBatchResponse }
 
 func (w WorkOrderBatch) MarshalJSON() ([]byte, error) {
 	type Alias WorkOrderBatch

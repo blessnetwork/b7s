@@ -218,6 +218,24 @@ func (h *HeadNode) processWorkOrderResponse(ctx context.Context, from peer.ID, r
 	return nil
 }
 
+func (h *HeadNode) processWorkOrderBatchResponse(ctx context.Context, from peer.ID, res response.WorkOrderBatch) error {
+
+	h.Log().Debug().
+		Stringer("from", from).
+		Str("request", res.RequestID).
+		Str("strand", res.StrandID).
+		Msg("received work order batch response")
+
+	key := peerStrandKey(res.RequestID, res.StrandID, from)
+	h.workOrderBatchResponses.Set(key, res.Results)
+
+	return nil
+}
+
+func peerStrandKey(requestID string, _ string, peer peer.ID) string {
+	return requestID + "/" + peer.String()
+}
+
 func determineThreshold(req execute.Request) float64 {
 
 	if req.Config.Threshold > 0 && req.Config.Threshold <= 1 {

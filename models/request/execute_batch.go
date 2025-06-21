@@ -13,7 +13,7 @@ type ExecuteBatch struct {
 	Topic                  string                   `json:"topic,omitempty"`
 	Template               ExecutionRequestTemplate `json:"template,omitempty"`
 	Arguments              [][]string               `json:"arguments,omitempty"`
-	WorkerConcurrencyLimit uint                     `json:"concurrency_limit,omitempty"`
+	WorkerConcurrencyLimit uint                     `json:"worker_concurrency_limit,omitempty"`
 }
 
 type ExecutionRequestTemplate struct {
@@ -36,10 +36,11 @@ func (e ExecuteBatch) WorkOrderBatch(id string, arguments ...[]string) *WorkOrde
 
 	// TBD: Implement.
 	w := &WorkOrderBatch{
-		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
-		StrandID:    id,
-		Template:    e.Template,
-		Arguments:   arguments,
+		BaseMessage:      bls.BaseMessage{TraceInfo: e.TraceInfo},
+		StrandID:         id,
+		Template:         e.Template,
+		Arguments:        arguments,
+		ConcurrencyLimit: e.WorkerConcurrencyLimit,
 	}
 	return w
 }

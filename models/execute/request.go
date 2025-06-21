@@ -1,10 +1,37 @@
 package execute
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-multierror"
 )
+
+// RequestHash is an md5 checksum of the most important request data:
+// CID/method.wasm <arg1> <arg2> ... <argN>
+type RequestHash string
+
+func GetExecutionID(r Request) RequestHash {
+
+	// CID/method.wasm arg1 arg2 arg3
+	sum := md5.Sum(
+		fmt.Appendf([]byte{}, "%v %v", FunctionInvocation(r), strings.Join(r.Arguments, " ")),
+	)
+	hex := hex.EncodeToString(sum[:])
+
+	return RequestHash(hex)
+}
+
+func FunctionInvocation(r Request) string {
+	return r.FunctionID + "/" + r.Method
+}
+
+func (h RequestHash) String() string {
+	return string(h)
+}
 
 // Request describes an execution request.
 type Request struct {

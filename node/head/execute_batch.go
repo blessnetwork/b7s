@@ -10,6 +10,7 @@ import (
 
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 type ExecutionBatchAssignments map[peer.ID]*request.WorkOrderBatch
@@ -32,17 +33,19 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 
 	log.Info().Msg("received a batch request")
 
-	err := h.executeBatch(ctx, requestID, req)
+	results, err := h.executeBatch(ctx, requestID, req)
 	if err != nil {
 		return fmt.Errorf("could not execute batch request: %w", err)
 	}
+
+	log.Info().Any("results", results).Msg("received batch responses")
 
 	// TODO: Send the response back.
 
 	return nil
 }
 
-func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) error {
+func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) (map[peer.ID]response.StrandResults, error) {
 
 	// TODO: Metrics and tracing
 
@@ -64,7 +67,7 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 	// node count is -1 - we want all the nodes that want to work.
 	peers, err := h.executeRollCall(ctx, rc, req.Topic, -1)
 	if err != nil {
-		return fmt.Errorf("could not execute roll call: %w", err)
+		return nil, fmt.Errorf("could not execute roll call: %w", err)
 	}
 
 	log.Debug().
@@ -87,13 +90,41 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 				Msg("partial failure to send batch requst")
 		}
 
-		return fmt.Errorf("could not send work order batch: %w", err)
+		return nil, fmt.Errorf("could not send work order batch: %w", err)
 	}
 
-	// Wait for results.
 	// TODO: Handle errors - reintroduce to the pool.
 
-	return nil
+	// Wait for results.
+
+	assignedWorkers := mapKeys(assignments)
+
+	waitctx, cancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
+	defer cancel()
+
+	keyfunc := func(peer peer.ID) string {
+		return peerStrandKey(requestID, assignments[peer].StrandID, peer)
+	}
+
+	results := gatherPeerMessages(
+		waitctx,
+		assignedWorkers,
+		keyfunc,
+		h.workOrderBatchResponses,
+	)
+
+	return results, nil
+}
+
+// generic helpers to get keys from a map. No locking or anything.
+func mapKeys[K comparable, V any](m map[K]V) []K {
+
+	keys := make([]K, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+
+	return keys
 }
 
 func logAssignments(log *zerolog.Logger, assignments map[peer.ID]*request.WorkOrderBatch) {
