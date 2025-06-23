@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
 )
@@ -40,12 +41,20 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 
 	log.Info().Any("results", results).Msg("received batch responses")
 
-	// TODO: Send the response back.
+	// TODO: Add actual status code.
+	res := req.Response(codes.OK, requestID).WithResults(results)
+
+	err = h.Send(ctx, from, res)
+	if err != nil {
+		return fmt.Errorf("could not send batch response: %w", err)
+	}
 
 	return nil
 }
 
-func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) (map[peer.ID]response.StrandResults, error) {
+type batchResults map[string]response.NodeStrandResults
+
+func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) (batchResults, error) {
 
 	// TODO: Metrics and tracing
 
@@ -106,14 +115,34 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 		return peerStrandKey(requestID, assignments[peer].StrandID, peer)
 	}
 
-	results := gatherPeerMessages(
+	batchResults := gatherPeerMessages(
 		waitctx,
 		assignedWorkers,
 		keyfunc,
 		h.workOrderBatchResponses,
 	)
 
-	return results, nil
+	strandResults := make(map[string]response.NodeStrandResults)
+	for peer, res := range batchResults {
+
+		sr := response.NodeStrandResults{
+			Peer:    peer,
+			Results: res.Results,
+		}
+
+		assignment, ok := assignments[peer]
+		// Should never happen.
+		if !ok {
+			return nil, fmt.Errorf("found a batch result for a peer without assignment (request: %v, peer: %v, reported strand id: %v)",
+				requestID,
+				peer.String(),
+				res.StrandID)
+		}
+
+		strandResults[assignment.StrandID] = sr
+	}
+
+	return strandResults, nil
 }
 
 // generic helpers to get keys from a map. No locking or anything.

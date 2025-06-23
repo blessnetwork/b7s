@@ -22,7 +22,7 @@ type HeadNode struct {
 	rollCall                *rollCallQueue
 	consensusResponses      *waitmap.WaitMap[string, response.FormCluster]
 	workOrderResponses      *waitmap.WaitMap[string, execute.NodeResult]
-	workOrderBatchResponses *waitmap.WaitMap[string, response.StrandResults]
+	workOrderBatchResponses *waitmap.WaitMap[string, response.WorkOrderBatch]
 }
 
 func New(core node.Core, options ...Option) (*HeadNode, error) {
@@ -45,7 +45,7 @@ func New(core node.Core, options ...Option) (*HeadNode, error) {
 		rollCall:                newQueue(rollCallQueueBufferSize),
 		consensusResponses:      waitmap.New[string, response.FormCluster](0),
 		workOrderResponses:      waitmap.New[string, execute.NodeResult](executionResultCacheSize),
-		workOrderBatchResponses: waitmap.New[string, response.StrandResults](executionResultCacheSize),
+		workOrderBatchResponses: waitmap.New[string, response.WorkOrderBatch](executionResultCacheSize),
 	}
 
 	head.Metrics().SetGaugeWithLabels(node.NodeInfoMetric, 1,

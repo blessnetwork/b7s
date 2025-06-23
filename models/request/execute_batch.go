@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 
 	"github.com/blessnetwork/b7s/models/bls"
+	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 type ExecuteBatch struct {
@@ -14,6 +16,14 @@ type ExecuteBatch struct {
 	Template               ExecutionRequestTemplate `json:"template,omitempty"`
 	Arguments              [][]string               `json:"arguments,omitempty"`
 	WorkerConcurrencyLimit uint                     `json:"worker_concurrency_limit,omitempty"`
+}
+
+func (e ExecuteBatch) Response(c codes.Code, id string) *response.ExecuteBatch {
+	return &response.ExecuteBatch{
+		BaseMessage: bls.BaseMessage{TraceInfo: e.TraceInfo},
+		RequestID:   id,
+		Code:        c,
+	}
 }
 
 type ExecutionRequestTemplate struct {

@@ -227,7 +227,7 @@ func (h *HeadNode) processWorkOrderBatchResponse(ctx context.Context, from peer.
 		Msg("received work order batch response")
 
 	key := peerStrandKey(res.RequestID, res.StrandID, from)
-	h.workOrderBatchResponses.Set(key, res.Results)
+	h.workOrderBatchResponses.Set(key, res)
 
 	return nil
 }

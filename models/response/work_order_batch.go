@@ -18,12 +18,12 @@ type WorkOrderBatch struct {
 	// However, this might change too in the future.
 	StrandID string
 
-	Results StrandResults
+	Results BatchResults
 }
 
-type StrandResults map[execute.RequestHash]*StrandResult
+type BatchResults map[execute.RequestHash]*BatchFunctionResult
 
-type StrandResult struct {
+type BatchFunctionResult struct {
 	execute.NodeResult
 
 	FunctionInvocation string

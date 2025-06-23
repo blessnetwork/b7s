@@ -38,7 +38,7 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 
 	// TODO: Handle parallelism
 
-	results := make(map[execute.RequestHash]*response.StrandResult)
+	results := make(map[execute.RequestHash]*response.BatchFunctionResult)
 
 	for _, args := range req.Arguments {
 
@@ -60,7 +60,7 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 		}
 
 		chunkID := execute.GetExecutionID(er)
-		results[chunkID] = &response.StrandResult{
+		results[chunkID] = &response.BatchFunctionResult{
 			FunctionInvocation: execute.FunctionInvocation(er),
 			Arguments:          args,
 			NodeResult: execute.NodeResult{

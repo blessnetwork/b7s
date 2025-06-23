@@ -190,14 +190,14 @@ func gatherPeerMessages[T any](
 	return results
 }
 
-func (h *HeadNode) gatherBatchResults(ctx context.Context, requestID string, strandID string, peers []peer.ID) map[peer.ID]response.StrandResults {
+func (h *HeadNode) gatherBatchResults(ctx context.Context, requestID string, strandID string, peers []peer.ID) map[peer.ID]response.WorkOrderBatch {
 
 	// We're willing to wait for a limited amount of time.
 	exctx, exCancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
 	defer exCancel()
 
 	var (
-		results = make(map[peer.ID]response.StrandResults)
+		results = make(map[peer.ID]response.WorkOrderBatch)
 		reslock sync.Mutex
 		wg      sync.WaitGroup
 	)
