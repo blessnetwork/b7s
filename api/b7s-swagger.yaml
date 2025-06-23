@@ -59,6 +59,33 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/functions/execute/batch:
+    post:
+      tags:
+        - functions
+      summary: Execute a Bless Function with a batch of arguments
+      description: Execute a Bless Function with a wide array of arguments
+      operationId: executeFunctionBatch
+      requuestBody:
+        description: Execute a Bless Function batch
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchExecutionRequest'
+            required: true
+      responses:
+        '200':
+          description: Successful execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchExecutionResponse'
+        '400':
+          description: Invalid execution request
+        '500':
+          description: Internal server error
+          
+
   /api/v1/functions/requests/result:
     post:
       tags:
@@ -493,3 +520,125 @@ components:
           type: string
           example: "200"
           x-go-type-skip-optional-pointer: true
+
+    BatchExecutionRequest:
+      required:
+        - template
+        - arguments
+      type: object
+      x-go-type-skip-optional-pointer: true
+      parameters:
+        template:
+          $ref: '#/components/schemas/TemplateExecutionRequest`
+        topic:
+          description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
+          type: string
+          x-go-type-skip-optional-pointer: true
+        arguments:
+          type: array
+          description: CLI arguments for the Bless Function
+          items:
+            type: array
+            items: string
+          example:
+            - [ "--arg", "first-invocation-argument",  "other arguments..." ]
+            - [ "--arg", "second-invocation-argument", "other arguments..." ]
+            - [ "--arg", "third-invocation-argument",  "other arguments..." ]
+          x-go-type-skip-optional-pointer: true
+       
+
+    TemplateExecutionRequest:
+      required:
+        - function_id
+        - method
+      type: object
+      x-go-type-skip-optional-pointer: true
+      properties:
+        function_id:
+          description: CID of the function
+          type: string
+          example: "bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea" 
+          x-go-type-skip-optional-pointer: true
+        method:
+          type: string
+          example: hello-world.wasm
+          description: Name of the WASM file to execute
+          x-go-type-skip-optional-pointer: true
+        config:
+          $ref: '#/components/schemas/ExecutionConfig'
+
+
+    BatchExecutionResponse:
+      type: object
+      x-go-type-skip-optional-pointer: true
+      properties:
+        code:
+          description: Status of the batch execution
+          type: string
+          example: "200"
+          x-go-type-skip-optional-pointer: true
+        request_id:
+          description: ID of the Execution Request
+          type: string
+          example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+          x-go-type-skip-optional-pointer: true
+        message:
+          description: If the Batch Execution Request failed, this message might have more info about the error
+          type: string
+          x-go-type-skip-optional-pointer: true
+        strands:
+          description: Results of the execution of the Batch Request, executed by different nodes
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            ref: '#/components/schemas/StrandResults`
+            x-go-type-skip-optional-pointer: true
+
+    StrandResults:
+      type: object
+      x-go-type: response.NodeStrandResults
+      x-go-type-import:
+        path: github.com/blessnetwork/b7s/models/response
+      properties:
+        peer:
+          description: ID of the peer who executed this
+          example: 12D3KooWRp3AVk7qtc2Av6xiqgAza1ZouksQaYcS2cvN94kHSCoa
+          type: string
+          x-go-type-skip-optional-pointer: true
+        results:
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            type: '#/components/schemas/BatchFunctionResult'
+
+    BatchFunctionResult:
+      type: object
+      x-go-type: response.BatchFunctionResult
+      x-go-type-import:
+        path: github.com/blessnetwork/b7s/models/response
+      x-go-type-skip-optional-pointer: true
+      properties:
+        function_invocation:
+          description: IPFS CID and the method of the function executed
+          example: bafybeia24v4czavtpjv2co3j54o4a5ztduqcpyyinerjgncx7s2s22s7ea/hello-world.wasm
+          x-go-type-skip-optional-pointer: true
+        arguments:
+          type: aray
+          description: Arguments for this function invocation
+          items:
+            type: string
+            example:
+              - --cli-flag
+              - cli-value
+          x-go-type-skip-optional-pointer: true
+        result:
+          $ref: '#/components/schemas/ExecutionResult'
+        metadata:
+          type: object
+          x-go-type-skip-optional-pointer: true
+
+
+
+
+  
+    
