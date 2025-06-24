@@ -72,7 +72,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BatchExecutionRequest'
-            required: true
+        required: true
       responses:
         '200':
           description: Successful execution
@@ -526,20 +526,20 @@ components:
         - template
         - arguments
       type: object
-      x-go-type-skip-optional-pointer: true
-      parameters:
+      properties:
         template:
-          $ref: '#/components/schemas/TemplateExecutionRequest`
+          $ref: '#/components/schemas/TemplateExecutionRequest'
         topic:
-          description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           type: string
+          description: In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
           x-go-type-skip-optional-pointer: true
         arguments:
           type: array
           description: CLI arguments for the Bless Function
           items:
             type: array
-            items: string
+            items:
+              type: string
           example:
             - [ "--arg", "first-invocation-argument",  "other arguments..." ]
             - [ "--arg", "second-invocation-argument", "other arguments..." ]
@@ -570,7 +570,6 @@ components:
 
     BatchExecutionResponse:
       type: object
-      x-go-type-skip-optional-pointer: true
       properties:
         code:
           description: Status of the batch execution
@@ -591,7 +590,7 @@ components:
           type: object
           x-go-type-skip-optional-pointer: true
           additionalProperties:
-            ref: '#/components/schemas/StrandResults`
+            ref: '#/components/schemas/StrandResults'
             x-go-type-skip-optional-pointer: true
 
     StrandResults:
