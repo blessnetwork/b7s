@@ -5,6 +5,7 @@ package api
 
 import (
 	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/response"
 	"github.com/blessnetwork/b7s/node/aggregate"
 )
 
@@ -16,6 +17,16 @@ type AggregatedResults = aggregate.Results
 
 // AttributeAttestors Require specific attestors as vouchers
 type AttributeAttestors = execute.AttributeAttestors
+
+// BatchExecutionRequest defines model for BatchExecutionRequest.
+type BatchExecutionRequest struct {
+	// Arguments CLI arguments for the Bless Function
+	Arguments [][]string               `json:"arguments"`
+	Template  TemplateExecutionRequest `json:"template"`
+
+	// Topic In the scenario where workers form subgroups, you can target a specific subgroup by specifying its identifier
+	Topic string `json:"topic,omitempty"`
+}
 
 // BatchExecutionResponse defines model for BatchExecutionResponse.
 type BatchExecutionResponse struct {
@@ -29,7 +40,7 @@ type BatchExecutionResponse struct {
 	RequestId string `json:"request_id,omitempty"`
 
 	// Strands Results of the execution of the Batch Request, executed by different nodes
-	Strands map[string]interface{} `json:"strands,omitempty"`
+	Strands map[string]StrandResults `json:"strands,omitempty"`
 }
 
 // ExecutionConfig Configuration options for the Execution Request
@@ -121,8 +132,26 @@ type ResultAggregation = execute.ResultAggregation
 // RuntimeConfig Configuration options for the Bless Runtime
 type RuntimeConfig = execute.BLSRuntimeConfig
 
+// StrandResults defines model for StrandResults.
+type StrandResults = response.NodeStrandResults
+
+// TemplateExecutionRequest defines model for TemplateExecutionRequest.
+type TemplateExecutionRequest struct {
+	// Config Configuration options for the Execution Request
+	Config ExecutionConfig `json:"config,omitempty"`
+
+	// FunctionId CID of the function
+	FunctionId string `json:"function_id"`
+
+	// Method Name of the WASM file to execute
+	Method string `json:"method"`
+}
+
 // ExecuteFunctionJSONRequestBody defines body for ExecuteFunction for application/json ContentType.
 type ExecuteFunctionJSONRequestBody = ExecutionRequest
+
+// ExecuteFunctionBatchJSONRequestBody defines body for ExecuteFunctionBatch for application/json ContentType.
+type ExecuteFunctionBatchJSONRequestBody = BatchExecutionRequest
 
 // InstallFunctionJSONRequestBody defines body for InstallFunction for application/json ContentType.
 type InstallFunctionJSONRequestBody = FunctionInstallRequest

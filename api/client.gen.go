@@ -92,8 +92,10 @@ type ClientInterface interface {
 
 	ExecuteFunction(ctx context.Context, body ExecuteFunctionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ExecuteFunctionBatch request
-	ExecuteFunctionBatch(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// ExecuteFunctionBatchWithBody request with any body
+	ExecuteFunctionBatchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ExecuteFunctionBatch(ctx context.Context, body ExecuteFunctionBatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// InstallFunctionWithBody request with any body
 	InstallFunctionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -133,8 +135,20 @@ func (c *Client) ExecuteFunction(ctx context.Context, body ExecuteFunctionJSONRe
 	return c.Client.Do(req)
 }
 
-func (c *Client) ExecuteFunctionBatch(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewExecuteFunctionBatchRequest(c.Server)
+func (c *Client) ExecuteFunctionBatchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExecuteFunctionBatchRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExecuteFunctionBatch(ctx context.Context, body ExecuteFunctionBatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExecuteFunctionBatchRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +259,19 @@ func NewExecuteFunctionRequestWithBody(server string, contentType string, body i
 	return req, nil
 }
 
-// NewExecuteFunctionBatchRequest generates requests for ExecuteFunctionBatch
-func NewExecuteFunctionBatchRequest(server string) (*http.Request, error) {
+// NewExecuteFunctionBatchRequest calls the generic ExecuteFunctionBatch builder with application/json body
+func NewExecuteFunctionBatchRequest(server string, body ExecuteFunctionBatchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewExecuteFunctionBatchRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewExecuteFunctionBatchRequestWithBody generates requests for ExecuteFunctionBatch with any type of body
+func NewExecuteFunctionBatchRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -264,10 +289,12 @@ func NewExecuteFunctionBatchRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -427,8 +454,10 @@ type ClientWithResponsesInterface interface {
 
 	ExecuteFunctionWithResponse(ctx context.Context, body ExecuteFunctionJSONRequestBody, reqEditors ...RequestEditorFn) (*ExecuteFunctionResponse, error)
 
-	// ExecuteFunctionBatchWithResponse request
-	ExecuteFunctionBatchWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExecuteFunctionBatchResponse, error)
+	// ExecuteFunctionBatchWithBodyWithResponse request with any body
+	ExecuteFunctionBatchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExecuteFunctionBatchResponse, error)
+
+	ExecuteFunctionBatchWithResponse(ctx context.Context, body ExecuteFunctionBatchJSONRequestBody, reqEditors ...RequestEditorFn) (*ExecuteFunctionBatchResponse, error)
 
 	// InstallFunctionWithBodyWithResponse request with any body
 	InstallFunctionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallFunctionResponse, error)
@@ -571,9 +600,17 @@ func (c *ClientWithResponses) ExecuteFunctionWithResponse(ctx context.Context, b
 	return ParseExecuteFunctionResponse(rsp)
 }
 
-// ExecuteFunctionBatchWithResponse request returning *ExecuteFunctionBatchResponse
-func (c *ClientWithResponses) ExecuteFunctionBatchWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExecuteFunctionBatchResponse, error) {
-	rsp, err := c.ExecuteFunctionBatch(ctx, reqEditors...)
+// ExecuteFunctionBatchWithBodyWithResponse request with arbitrary body returning *ExecuteFunctionBatchResponse
+func (c *ClientWithResponses) ExecuteFunctionBatchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExecuteFunctionBatchResponse, error) {
+	rsp, err := c.ExecuteFunctionBatchWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExecuteFunctionBatchResponse(rsp)
+}
+
+func (c *ClientWithResponses) ExecuteFunctionBatchWithResponse(ctx context.Context, body ExecuteFunctionBatchJSONRequestBody, reqEditors ...RequestEditorFn) (*ExecuteFunctionBatchResponse, error) {
+	rsp, err := c.ExecuteFunctionBatch(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

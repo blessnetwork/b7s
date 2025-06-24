@@ -66,7 +66,7 @@ paths:
       summary: Execute a Bless Function with a batch of arguments
       description: Execute a Bless Function with a wide array of arguments
       operationId: executeFunctionBatch
-      requuestBody:
+      requestBody:
         description: Execute a Bless Function batch
         content:
           application/json:
@@ -587,11 +587,9 @@ components:
           x-go-type-skip-optional-pointer: true
         strands:
           description: Results of the execution of the Batch Request, executed by different nodes
-          type: object
           x-go-type-skip-optional-pointer: true
           additionalProperties:
-            ref: '#/components/schemas/StrandResults'
-            x-go-type-skip-optional-pointer: true
+            $ref: '#/components/schemas/StrandResults'
 
     StrandResults:
       type: object
