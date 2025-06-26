@@ -16,6 +16,8 @@ func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBa
 
 	variants := req.Arguments
 
+	// TODO: Do this in one go, not two maps.
+
 	// Assign arguments to a list of peers in a round robin fashion
 	n := len(peers)
 	a := make(map[peer.ID][][]string)
@@ -29,7 +31,7 @@ func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBa
 	for _, peer := range peers {
 
 		strandID := newStrandID(requestID)
-		assignments[peer] = req.WorkOrderBatch(strandID, a[peer]...)
+		assignments[peer] = req.WorkOrderBatch(requestID, strandID, a[peer]...)
 	}
 
 	return assignments

@@ -59,7 +59,7 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 	// TODO: Metrics and tracing
 
 	// Template request plus all others
-	size := 1 + len(req.Arguments)
+	size := len(req.Arguments)
 
 	log := h.Log().With().
 		Str("request", requestID).
@@ -73,8 +73,11 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 
 	rc := rollCallRequest(req.Template.FunctionID, requestID, 0, req.Template.Config.Attributes)
 
+	rctx, cancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
+	defer cancel()
+
 	// node count is -1 - we want all the nodes that want to work.
-	peers, err := h.executeRollCall(ctx, rc, req.Topic, -1)
+	peers, err := h.executeRollCall(rctx, rc, req.Topic, -1)
 	if err != nil {
 		return nil, fmt.Errorf("could not execute roll call: %w", err)
 	}
@@ -111,8 +114,8 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 	waitctx, cancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
 	defer cancel()
 
-	keyfunc := func(peer peer.ID) string {
-		return peerStrandKey(requestID, assignments[peer].StrandID, peer)
+	keyfunc := func(id peer.ID) string {
+		return peerStrandKey(requestID, assignments[id].StrandID, id)
 	}
 
 	batchResults := gatherPeerMessages(
@@ -148,7 +151,7 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 // generic helpers to get keys from a map. No locking or anything.
 func mapKeys[K comparable, V any](m map[K]V) []K {
 
-	keys := make([]K, len(m))
+	keys := make([]K, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
 	}

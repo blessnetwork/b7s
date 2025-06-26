@@ -21,6 +21,7 @@ import (
 	"github.com/blessnetwork/b7s/api"
 	"github.com/blessnetwork/b7s/config"
 	b7shost "github.com/blessnetwork/b7s/host"
+	b7slog "github.com/blessnetwork/b7s/log"
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/node"
 	"github.com/blessnetwork/b7s/store"
@@ -57,6 +58,7 @@ func run() int {
 
 	// Update log level to what's in the config.
 	log = log.Level(parseLogLevel(cfg.Log.Level))
+	b7slog.DefaultLogger = log
 
 	var (
 		nodeID  string
