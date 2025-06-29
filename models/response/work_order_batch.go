@@ -26,8 +26,8 @@ type BatchResults map[execute.RequestHash]*BatchFunctionResult
 type BatchFunctionResult struct {
 	execute.NodeResult
 
-	FunctionInvocation string
-	Arguments          []string
+	FunctionInvocation string   `json:"function_invocation,omitempty"`
+	Arguments          []string `json:"arguments,omitempty"`
 }
 
 func (WorkOrderBatch) Type() string { return bls.MessageWorkOrderBatchResponse }

@@ -27,9 +27,9 @@ func (e ExecuteBatch) Response(c codes.Code, id string) *response.ExecuteBatch {
 }
 
 type ExecutionRequestTemplate struct {
-	FunctionID string         `json:"function_id"`
-	Method     string         `json:"method"`
-	Config     execute.Config `json:"config"`
+	FunctionID string         `json:"function_id,omitempty"`
+	Method     string         `json:"method,omitempty"`
+	Config     execute.Config `json:"config,omitempty"`
 }
 
 func (e ExecuteBatch) RollCall(id string) *RollCall {

@@ -52,8 +52,8 @@ type Usage struct {
 }
 
 type PBFTResultInfo struct {
-	View             uint      `json:"view"`
-	RequestTimestamp time.Time `json:"request_timestamp,omitempty"`
+	View             *uint     `json:"view,omitempty"`
+	RequestTimestamp time.Time `json:"request_timestamp,omitzero"`
 	Replica          peer.ID   `json:"replica,omitempty"`
 }
 
