@@ -77,7 +77,7 @@ func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req reque
 	defer cancel()
 
 	// node count is -1 - we want all the nodes that want to work.
-	peers, err := h.executeRollCall(rctx, rc, req.Topic, -1)
+	peers, err := h.executeRollCall(rctx, rc, req.Topic, req.Template.Config.NodeCount)
 	if err != nil {
 		return nil, fmt.Errorf("could not execute roll call: %w", err)
 	}
