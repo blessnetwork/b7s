@@ -23,7 +23,7 @@ jobs:
       - name: build
         run: |
           GOOS=linux GOARCH=amd64 make
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.github_actor }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github_actor }}" --password-stdin
           docker build . --tag ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.tag_name }} -f docker/Dockerfile
           docker build . --tag ghcr.io/${{ github.repository }}:latest -f docker/Dockerfile
           docker push ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.tag_name }}
