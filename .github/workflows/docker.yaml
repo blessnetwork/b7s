@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/setup-go@v3
         with:
@@ -20,7 +23,7 @@ jobs:
       - name: build
         run: |
           GOOS=linux GOARCH=amd64 make
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github_actor }}" --password-stdin
           docker build . --tag ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.tag_name }} -f docker/Dockerfile
           docker build . --tag ghcr.io/${{ github.repository }}:latest -f docker/Dockerfile
           docker push ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.tag_name }}
