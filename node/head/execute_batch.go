@@ -54,17 +54,20 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 
 type batchResults map[string]response.NodeStrandResults
 
-func (h *HeadNode) executeBatch(ctx context.Context, requestID string, req request.ExecuteBatch) (batchResults, error) {
+func (h *HeadNode) executeBatch(
+	ctx context.Context,
+	requestID string,
+	req request.ExecuteBatch,
+) (
+	batchResults,
+	error,
+) {
 
 	// TODO: Metrics and tracing
-
-	// Template request plus all others
-	size := len(req.Arguments)
 
 	log := h.Log().With().
 		Str("request", requestID).
 		Str("function", req.Template.FunctionID).
-		Int("batch_size", size).
 		Logger()
 
 	log.Info().Msg("processing batch execution request")
