@@ -76,6 +76,13 @@ type Connectivity struct {
 
 type Head struct {
 	RestAPI string `koanf:"rest-api" flag:"rest-api"`
+	Batch   Batch  `koanf:"batch"`
+}
+
+type Batch struct {
+	Server          string        `koanf:"server"           flag:"batch-db-server"`
+	DBName          string        `koanf:"db-name"          flag:"batch-db-name"`
+	RequeueInterval time.Duration `koanf:"requeue-interval" flag:"batch-requeue-interval"`
 }
 
 type Worker struct {
@@ -184,6 +191,12 @@ func getFlagDescription(flag string) string {
 		return "tracing exporter HTTP endpoint"
 	case "prometheus-address":
 		return "address where prometheus metrics will be served"
+	case "batch-db-server":
+		return "mongodb server to use for persisting batch data"
+	case "batch-db-name":
+		return "database name to use for persisting batch data"
+	case "batch-requeue-interval":
+		return "interval at which batch requests should be checked or requeued"
 	default:
 		return ""
 	}

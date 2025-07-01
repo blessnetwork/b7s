@@ -134,7 +134,6 @@ func (h *Host) connectToPeers(ctx context.Context, peers []bls.Peer) error {
 	// Connect to the bootstrap nodes.
 	var errGroup errgroup.Group
 	for _, peer := range peers {
-		peer := peer
 
 		// Should not happen other than misconfig, but we shouldn't dial self.
 		if peer.ID == h.ID() {

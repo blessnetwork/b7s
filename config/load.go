@@ -72,6 +72,11 @@ func load(args []string) (*Config, error) {
 		return nil, fmt.Errorf("could not unmarshal konfig: %w", err)
 	}
 
+	err = cfg.valid()
+	if err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
+
 	return &cfg, nil
 }
 

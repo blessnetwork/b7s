@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/afero"
 
 	"github.com/blessnetwork/b7s/models/bls"

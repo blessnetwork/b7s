@@ -9,7 +9,6 @@ import (
 
 	"github.com/blessnetwork/b7s/consensus/pbft"
 	"github.com/blessnetwork/b7s/models/execute"
-	"github.com/blessnetwork/b7s/models/response"
 	"github.com/blessnetwork/b7s/node/internal/waitmap"
 )
 
@@ -157,8 +156,6 @@ func gatherPeerMessages[T any](
 	wm *waitmap.WaitMap[string, T],
 ) map[peer.ID]T {
 
-	// TODO: Provide a limited context now.
-
 	var (
 		results = make(map[peer.ID]T)
 		reslock sync.Mutex
@@ -183,45 +180,6 @@ func gatherPeerMessages[T any](
 
 			results[peer] = res
 		}(p)
-	}
-
-	wg.Wait()
-
-	return results
-}
-
-func (h *HeadNode) gatherBatchResults(ctx context.Context, requestID string, strandID string, peers []peer.ID) map[peer.ID]response.WorkOrderBatch {
-
-	// We're willing to wait for a limited amount of time.
-	exctx, exCancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
-	defer exCancel()
-
-	var (
-		results = make(map[peer.ID]response.WorkOrderBatch)
-		reslock sync.Mutex
-		wg      sync.WaitGroup
-	)
-
-	wg.Add(len(peers))
-
-	// Wait on peers asynchronously.
-	for _, rp := range peers {
-		rp := rp
-
-		go func(peer peer.ID) {
-			defer wg.Done()
-			key := peerStrandKey(requestID, strandID, peer)
-			res, ok := h.workOrderBatchResponses.WaitFor(exctx, key)
-			if !ok {
-				return
-			}
-
-			h.Log().Info().Str("peer", peer.String()).Msg("accounted execution response from peer")
-
-			reslock.Lock()
-			defer reslock.Unlock()
-			results[peer] = res
-		}(rp)
 	}
 
 	wg.Wait()

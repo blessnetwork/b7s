@@ -14,12 +14,12 @@ var _ (json.Marshaler) = (*Execute)(nil)
 type Execute struct {
 	bls.BaseMessage
 	RequestID string            `json:"request_id,omitempty"`
-	Code      codes.Code        `json:"code,omitempty"`
-	Results   execute.ResultMap `json:"results,omitempty"`
-	Cluster   execute.Cluster   `json:"cluster,omitempty"`
+	Code      codes.Code        `json:"code,omitzero"`
+	Results   execute.ResultMap `json:"results,omitzero"`
+	Cluster   execute.Cluster   `json:"cluster,omitzero"`
 
 	// Used to communicate the reason for failure to the user.
-	ErrorMessage string `json:"message,omitempty"`
+	ErrorMessage string `json:"message,omitzero"`
 }
 
 func (e *Execute) WithResults(r execute.ResultMap) *Execute {

@@ -3,7 +3,7 @@ package main
 import (
 	"slices"
 
-	mp "github.com/armon/go-metrics/prometheus"
+	mp "github.com/hashicorp/go-metrics/prometheus"
 
 	"github.com/blessnetwork/b7s/consensus/pbft"
 	"github.com/blessnetwork/b7s/consensus/raft"

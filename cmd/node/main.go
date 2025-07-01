@@ -24,9 +24,9 @@ import (
 	b7slog "github.com/blessnetwork/b7s/log"
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/node"
-	"github.com/blessnetwork/b7s/store"
-	"github.com/blessnetwork/b7s/store/codec"
-	"github.com/blessnetwork/b7s/store/traceable"
+	"github.com/blessnetwork/b7s/stores/store"
+	"github.com/blessnetwork/b7s/stores/store/codec"
+	"github.com/blessnetwork/b7s/stores/store/traceable"
 	"github.com/blessnetwork/b7s/telemetry"
 )
 
@@ -247,7 +247,7 @@ func run() int {
 		}
 
 	case bls.HeadNode:
-		node, err = createHeadNode(core, cfg)
+		node, err = createHeadNode(ctx, core, cfg)
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")

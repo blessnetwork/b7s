@@ -5,15 +5,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
-	"github.com/blessnetwork/b7s/consensus"
 	cons "github.com/blessnetwork/b7s/consensus"
 	"github.com/blessnetwork/b7s/consensus/pbft"
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
-	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
 )
@@ -69,12 +67,14 @@ rollCallResponseLoop:
 
 		case reply := <-h.rollCall.responses(requestID):
 
-			// Check if this is the reply we want - shouldn't really happen.
-			if reply.FunctionID != rc.FunctionID {
+			// Check if this is the reply we want - should be the same function and node should report if they
+			// support batch executions.
+			if reply.FunctionID != rc.FunctionID || reply.BatchSupport != rc.Batch {
 				log.Info().
 					Stringer("peer", reply.From).
 					Str("function_got", reply.FunctionID).
-					Msg("skipping inadequate roll call response - wrong function")
+					Bool("batch_support", reply.BatchSupport).
+					Msg("skipping inadequate roll call response")
 				continue
 			}
 
@@ -93,7 +93,9 @@ rollCallResponseLoop:
 
 			// -1 means we'll take any peers reporting
 			if len(reportingPeers) >= nodeCount && nodeCount != -1 {
-				log.Info().Msg("enough peers reported for roll call")
+				log.Info().
+					Int("count", len(reportingPeers)).
+					Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}
 		}
@@ -157,15 +159,4 @@ func (h *HeadNode) processRollCallResponse(ctx context.Context, from peer.ID, re
 	h.rollCall.add(res.RequestID, rres)
 
 	return nil
-}
-
-// TODO: RollCall must have trace info propagated.
-func rollCallRequest(function string, id string, c consensus.Type, attributes *execute.Attributes) *request.RollCall {
-	return &request.RollCall{
-		// BaseMessage: bls.BaseMessage{TraceInfo: req.TraceInfo},
-		RequestID:  id,
-		FunctionID: function,
-		Consensus:  c,
-		Attributes: attributes,
-	}
 }

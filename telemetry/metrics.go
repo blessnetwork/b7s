@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/armon/go-metrics"
-	mp "github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics"
+	mp "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"

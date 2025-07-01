@@ -14,19 +14,27 @@ import (
 // CID/method.wasm <arg1> <arg2> ... <argN>
 type RequestHash string
 
-func GetExecutionID(r Request) RequestHash {
+func (r Request) GetExecutionID() RequestHash {
+	return ExecutionID(r.FunctionID, r.Method, r.Arguments)
+}
+
+func (r Request) FunctionInvocation() string {
+	return FunctionInvocation(r.FunctionID, r.Method)
+}
+
+func ExecutionID(cid string, method string, arguments []string) RequestHash {
 
 	// CID/method.wasm arg1 arg2 arg3
 	sum := md5.Sum(
-		fmt.Appendf([]byte{}, "%v %v", FunctionInvocation(r), strings.Join(r.Arguments, " ")),
+		fmt.Appendf([]byte{}, "%v %v", FunctionInvocation(cid, method), strings.Join(arguments, " ")),
 	)
 	hex := hex.EncodeToString(sum[:])
 
 	return RequestHash(hex)
 }
 
-func FunctionInvocation(r Request) string {
-	return r.FunctionID + "/" + r.Method
+func FunctionInvocation(cid string, method string) string {
+	return cid + "/" + method
 }
 
 func (h RequestHash) String() string {

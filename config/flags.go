@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/knadh/koanf/providers/structs"
 	"github.com/spf13/pflag"
@@ -53,6 +54,9 @@ func addFlag(fs *pflag.FlagSet, fc CLIFlag) error {
 
 	case []string:
 		fs.StringSliceP(fc.Flag, fc.Shorthand, nil, fc.Description)
+
+	case time.Duration:
+		fs.DurationP(fc.Flag, fc.Shorthand, def, fc.Description)
 
 	default:
 		return errors.New("unsupported type for a CLI flag. Extend support by adding handling for the new flag type")

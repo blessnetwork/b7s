@@ -1,12 +1,13 @@
 package head
 
 import (
-	"github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics/prometheus"
 )
 
 // Tracing span names.
 const (
-	spanExecute = "Execute"
+	spanExecute      = "Execute"
+	spanExecuteBatch = "ExecuteBatch"
 )
 
 var (

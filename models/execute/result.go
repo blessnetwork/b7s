@@ -17,44 +17,43 @@ import (
 type NodeResult struct {
 	Result
 
-	Signature string         `json:"signature,omitempty"` // Signed digest of the response.
-	PBFT      PBFTResultInfo `json:"pbft,omitempty"`
-	Metadata  any            `json:"metadata,omitempty"`
+	Signature string         `json:"signature,omitzero"` // Signed digest of the response.
+	PBFT      PBFTResultInfo `json:"pbft,omitzero"`
+	Metadata  any            `json:"metadata,omitzero"`
 }
 
 // Result describes an execution result.
 type Result struct {
-	Code   codes.Code    `json:"code"`
-	Result RuntimeOutput `json:"result"`
-	Usage  Usage         `json:"usage,omitempty"`
+	Code   codes.Code    `json:"code,omitzero"`
+	Result RuntimeOutput `json:"result,omitzero"`
+	Usage  Usage         `json:"usage,omitzero"`
 }
 
 // Cluster represents the set of peers that executed the request.
 type Cluster struct {
-	Main  peer.ID   `json:"main,omitempty"`
-	Peers []peer.ID `json:"peers,omitempty"`
+	Main  peer.ID   `json:"main,omitzero"`
+	Peers []peer.ID `json:"peers,omitzero"`
 }
 
 // RuntimeOutput describes the output produced by the Bless Runtime during execution.
 type RuntimeOutput struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
+	Stdout   string `json:"stdout,omitzero"`
+	Stderr   string `json:"stderr,omitzero"`
 	ExitCode int    `json:"exit_code"`
-	Log      string `json:"-"`
 }
 
 // Usage represents the resource usage information for a particular execution.
 type Usage struct {
-	WallClockTime time.Duration `json:"wall_clock_time,omitempty"`
-	CPUUserTime   time.Duration `json:"cpu_user_time,omitempty"`
-	CPUSysTime    time.Duration `json:"cpu_sys_time,omitempty"`
-	MemoryMaxKB   int64         `json:"memory_max_kb,omitempty"`
+	WallClockTime time.Duration `json:"wall_clock_time,omitzero"`
+	CPUUserTime   time.Duration `json:"cpu_user_time,omitzero"`
+	CPUSysTime    time.Duration `json:"cpu_sys_time,omitzero"`
+	MemoryMaxKB   int64         `json:"memory_max_kb,omitzero"`
 }
 
 type PBFTResultInfo struct {
 	View             *uint     `json:"view,omitempty"`
 	RequestTimestamp time.Time `json:"request_timestamp,omitzero"`
-	Replica          peer.ID   `json:"replica,omitempty"`
+	Replica          peer.ID   `json:"replica,omitzero"`
 }
 
 // ResultMap contains execution results from multiple peers.

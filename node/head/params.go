@@ -7,13 +7,16 @@ import (
 )
 
 const (
-	DefaultRollCallTimeout         = 5 * time.Second
-	DefaultExecutionTimeout        = 20 * time.Second
-	DefaultClusterFormationTimeout = 10 * time.Second
-	DefaultConsensusAlgorithm      = consensus.Raft
+	DefaultRollCallTimeout          = 5 * time.Second
+	DefaultExecutionTimeout         = 20 * time.Second
+	DefaultClusterFormationTimeout  = 10 * time.Second
+	DefaultConsensusAlgorithm       = consensus.Raft
+	DefaultBatchWorkItemMaxAttempts = 10
+	DefaultBatchRequeueInterval     = time.Hour
 
 	rollCallQueueBufferSize  = 1000
 	executionResultCacheSize = 1000
+	batchResumeDelay         = 1 * time.Minute
 
 	defaultExecutionThreshold = 0.6
 

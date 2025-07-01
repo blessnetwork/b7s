@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"context"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -50,6 +51,7 @@ func ExecutionAttributes(requestID string, req execute.Request) []attribute.KeyV
 	return []attribute.KeyValue{
 		b7ssemconv.FunctionCID.String(req.FunctionID),
 		b7ssemconv.FunctionMethod.String(req.Method),
+		b7ssemconv.FunctionArguments.String(strings.Join(req.Arguments, " ")),
 		b7ssemconv.ExecutionNodeCount.Int(req.Config.NodeCount),
 		b7ssemconv.ExecutionConsensus.String(req.Config.ConsensusAlgorithm),
 		b7ssemconv.ExecutionRequestID.String(requestID),

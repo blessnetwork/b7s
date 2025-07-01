@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.opentelemetry.io/otel/trace"
 
@@ -69,6 +69,9 @@ func (w *Worker) processWorkOrder(ctx context.Context, from peer.ID, req request
 }
 
 func (w *Worker) execute(ctx context.Context, requestID string, timestamp time.Time, req execute.Request, from peer.ID) (codes.Code, execute.Result, error) {
+
+	ctx, span := w.Tracer().Start(ctx, spanExecute, trace.WithAttributes(tracing.ExecutionAttributes(requestID, req)...))
+	defer span.End()
 
 	// Check if we have function in store.
 	functionInstalled, err := w.fstore.IsInstalled(req.FunctionID)
