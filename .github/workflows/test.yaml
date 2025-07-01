@@ -27,6 +27,8 @@ jobs:
           go tool cover -func=coverage.out -o=coverage.out
 
   integration-tests:
+    # NOTE: Temporarily disable failing tests (obsoleted OS image)
+    if: false
     name: integration tests
     # Run on older Ubuntu version because of older LibSSL dependency.
     runs-on: ubuntu-20.04
