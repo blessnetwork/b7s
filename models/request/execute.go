@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/blessnetwork/b7s/consensus"
-	"github.com/blessnetwork/b7s/consensus/pbft"
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
@@ -81,9 +80,9 @@ func (e Execute) Valid() error {
 
 	if c == consensus.PBFT &&
 		e.Config.NodeCount > 0 &&
-		e.Config.NodeCount < pbft.MinimumReplicaCount {
+		e.Config.NodeCount < pbftMinimumReplicaCount {
 
-		multierr = multierror.Append(multierr, fmt.Errorf("minimum %v nodes needed for PBFT consensus", pbft.MinimumReplicaCount))
+		multierr = multierror.Append(multierr, fmt.Errorf("minimum %v nodes needed for PBFT consensus", pbftMinimumReplicaCount))
 	}
 
 	return multierr.ErrorOrNil()
