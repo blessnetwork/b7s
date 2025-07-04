@@ -77,7 +77,7 @@ func (s *Store) RetrieveFunctions(_ context.Context) ([]bls.FunctionRecord, erro
 		var function bls.FunctionRecord
 		err := s.retrieve(it.Key(), &function)
 		if err != nil {
-			return nil, fmt.Errorf("could not retrieve functioN (key: %x): %w", it.Key(), err)
+			return nil, fmt.Errorf("could not retrieve function (key: %x): %w", it.Key(), err)
 		}
 
 		functions = append(functions, function)
