@@ -75,7 +75,9 @@ type Connectivity struct {
 }
 
 type Head struct {
-	RestAPI string `koanf:"rest-api" flag:"rest-api"`
+	RestAPI       string `koanf:"rest-api"        flag:"rest-api"`
+	BatchDBServer string `koanf:"batch-db-server" flag:"batch-db-server"`
+	BatchDBName   string `koanf:"batch-db-name"   flag:"batch-db-name"`
 }
 
 type Worker struct {
@@ -184,6 +186,10 @@ func getFlagDescription(flag string) string {
 		return "tracing exporter HTTP endpoint"
 	case "prometheus-address":
 		return "address where prometheus metrics will be served"
+	case "batch-db-server":
+		return "mongodb server to use for persisting batch data"
+	case "batch-db-name":
+		return "database name to use for persisting batch data"
 	default:
 		return ""
 	}

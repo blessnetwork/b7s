@@ -78,6 +78,6 @@ func TestChunkStore(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err := store.GetChunk(ctx, chunk.ID)
-		require.Error(t, err) // Should fail as the batch no longer exists
+		require.Error(t, err)
 	})
 }
