@@ -247,7 +247,7 @@ func run() int {
 		}
 
 	case bls.HeadNode:
-		node, err = createHeadNode(core, cfg)
+		node, err = createHeadNode(ctx, core, cfg)
 	}
 	if err != nil {
 		log.Error().Err(err).Msg("could not create node")

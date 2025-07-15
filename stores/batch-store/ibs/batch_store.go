@@ -10,8 +10,8 @@ import (
 type BatchStore struct {
 }
 
-func NewBatchStore() (*BatchStore, error) {
-	return &BatchStore{}, errors.New("TBD: Not implemented")
+func NewBatchStore() *BatchStore {
+	return &BatchStore{}
 }
 
 func (s *BatchStore) CreateBatch(ctx context.Context, rec *batchstore.ExecuteBatchRecord) error {
