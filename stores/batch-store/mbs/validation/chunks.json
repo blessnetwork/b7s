@@ -1,0 +1,23 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": [
+            "id",
+            "request_id"
+        ],
+        "properties": {
+            "id": {
+                "bsonType": "string",
+                "description": "chunk ID"
+            },
+            "request_id": {
+                "bsonType": "string",
+                "description": "ID of the parent execution request"
+            },
+            "status": {
+                "bsonType": "int",
+                "description": "status of this execution chunk"
+            }
+        }
+    }
+}

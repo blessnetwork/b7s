@@ -1,0 +1,36 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": [
+            "id",
+            "request_id",
+            "chunk_id"
+        ],
+        "properties": {
+            "id": {
+                "bsonType": "string",
+                "description": "chunk ID"
+            },
+            "request_id": {
+                "bsonType": "string",
+                "description": "ID of the parent execution request"
+            },
+            "chunk_id": {
+                "bsonType": "string",
+                "description": "ID of the chunk this item belongs to"
+            },
+            "arguments": {
+                "bsonType": "array",
+                "description": "CLI arguments for b7s function"
+            },
+            "status": {
+                "bsonType": "int",
+                "description": "status of this execution item"
+            },
+            "attempts": {
+                "bsonType": "int",
+                "description": "number of execution attempts"
+            }
+        }
+    }
+}
