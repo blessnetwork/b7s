@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blessnetwork/b7s/models/codes"

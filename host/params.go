@@ -1,7 +1,7 @@
 package host
 
 import (
-	"github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics/prometheus"
 )
 
 const (

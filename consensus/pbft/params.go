@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics/prometheus"
 	"github.com/libp2p/go-libp2p/core/protocol"
 )
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 	otelcodes "go.opentelemetry.io/otel/codes"
 

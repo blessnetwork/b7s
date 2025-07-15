@@ -3,7 +3,7 @@ package raft
 import (
 	"time"
 
-	"github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics/prometheus"
 )
 
 // Raft and consensus related parameters.

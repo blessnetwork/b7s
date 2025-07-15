@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/models/bls"
-	"github.com/blessnetwork/b7s/store"
-	"github.com/blessnetwork/b7s/store/codec"
+	"github.com/blessnetwork/b7s/stores/store"
+	"github.com/blessnetwork/b7s/stores/store/codec"
 	"github.com/blessnetwork/b7s/testing/helpers"
 	"github.com/blessnetwork/b7s/testing/mocks"
 )

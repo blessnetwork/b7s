@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/hashicorp/raft"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/rs/zerolog"

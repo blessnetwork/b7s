@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
 func (s *BatchStore) CreateWorkItem(ctx context.Context, rec *batchstore.WorkItemRecord) error {

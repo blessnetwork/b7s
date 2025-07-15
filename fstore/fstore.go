@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/armon/go-metrics"
 	"github.com/cavaliergopher/grab/v3"
+	"github.com/hashicorp/go-metrics"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"

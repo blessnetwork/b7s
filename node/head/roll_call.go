@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blessnetwork/b7s/consensus"

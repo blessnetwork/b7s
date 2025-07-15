@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/armon/go-metrics"
 	"github.com/go-logr/zerologr"
+	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"

@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blessnetwork/b7s/models/bls"
-	"github.com/blessnetwork/b7s/store"
+	"github.com/blessnetwork/b7s/stores/store"
 	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 	"github.com/blessnetwork/b7s/telemetry/tracing"
 )

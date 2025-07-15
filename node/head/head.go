@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/armon/go-metrics"
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-metrics"
 
 	"github.com/blessnetwork/b7s/info"
 	"github.com/blessnetwork/b7s/models/execute"

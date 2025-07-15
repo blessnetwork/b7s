@@ -5,7 +5,6 @@ go 1.24.4
 require (
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/a-h/templ v0.3.819
-	github.com/armon/go-metrics v0.4.1
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/blocklessnetwork/b7s-attributes v0.0.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
@@ -18,6 +17,7 @@ require (
 	github.com/go-logr/zerologr v1.2.3
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/go-hclog v1.6.3
+	github.com/hashicorp/go-metrics v0.5.4
 	github.com/hashicorp/raft v1.7.1
 	github.com/hashicorp/raft-boltdb/v2 v2.3.0
 	github.com/ipfs/boxo v0.24.0
@@ -38,6 +38,7 @@ require (
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
 	github.com/ziflex/lecho/v3 v3.7.0
+	go.mongodb.org/mongo-driver/v2 v2.2.2
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.55.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.55.0
 	go.opentelemetry.io/otel v1.31.0
@@ -50,6 +51,7 @@ require (
 )
 
 require (
+	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cilium/ebpf v0.16.0 // indirect
@@ -119,7 +121,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.etcd.io/bbolt v1.3.11 // indirect
-	go.mongodb.org/mongo-driver/v2 v2.2.2 // indirect
 	go.opentelemetry.io/otel/metric v1.31.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/dig v1.18.0 // indirect

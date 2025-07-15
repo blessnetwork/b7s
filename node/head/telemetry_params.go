@@ -1,7 +1,7 @@
 package head
 
 import (
-	"github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics/prometheus"
 )
 
 // Tracing span names.
