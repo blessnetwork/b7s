@@ -5,9 +5,6 @@ import (
 )
 
 type Store interface {
-	// TODO: Remove this from the interface.
-	Init(context.Context) error
-
 	BatchStore
 	ChunkStore
 	WorkItemStore
@@ -24,17 +21,18 @@ type BatchStore interface {
 }
 
 type ChunkStore interface {
-	CreateChunk(ctx context.Context, rec *ChunkRecord) error
+	CreateChunks(ctx context.Context, rec ...*ChunkRecord) error
 	GetChunk(ctx context.Context, id string) (*ChunkRecord, error)
+	// GetChunks(ctx context.Context, ids ...string) ([]*ChunkRecord, error)
 	UpdateChunk(ctx context.Context, rec *ChunkRecord) error
-	UpdateChunkStatus(ctx context.Context, id string, status int32) error
-	DeleteChunk(ctx context.Context, id string) error
+	UpdateChunkStatus(ctx context.Context, status int32, ids ...string) error
+	DeleteChunks(ctx context.Context, ids ...string) error
 }
 
 type WorkItemStore interface {
-	CreateWorkItem(ctx context.Context, rec *WorkItemRecord) error
+	CreateWorkItems(ctx context.Context, rec ...*WorkItemRecord) error
 	GetWorkItem(ctx context.Context, id string) (*WorkItemRecord, error)
 	UpdateWorkItem(ctx context.Context, rec *WorkItemRecord) error
-	UpdateWorkItemStatus(ctx context.Context, id string, status int32) error
-	DeleteWorkItem(ctx context.Context, id string) error
+	UpdateWorkItemStatus(ctx context.Context, status int32, ids ...string) error
+	DeleteWorkItems(ctx context.Context, ids ...string) error
 }

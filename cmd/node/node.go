@@ -76,9 +76,14 @@ func createHeadNode(ctx context.Context, core node.Core, cfg *config.Config) (No
 			return nil, fmt.Errorf("could not connect to batch server: %w", err)
 		}
 
-		bs, err := mbs.NewBatchStore(cli)
+		bs, err := mbs.NewBatchStore(cli, mbs.DBName(cfg.Head.BatchDBName))
 		if err != nil {
 			return nil, fmt.Errorf("could not create batch store: %w", err)
+		}
+
+		err = bs.Init(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not initialize batch store: %w", err)
 		}
 
 		opts = append(opts, head.BatchStore(bs))

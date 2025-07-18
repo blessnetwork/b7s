@@ -7,7 +7,7 @@ type Config struct {
 }
 
 var defaultConfig = Config{
-	dbname:                    "playground",
+	dbname:                    "b7s-db",
 	initCollections:           true,
 	ignoreInitNamespaceErrors: true,
 }

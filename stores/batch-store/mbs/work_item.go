@@ -9,9 +9,9 @@ import (
 	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
-func (s *BatchStore) CreateWorkItem(ctx context.Context, rec *batchstore.WorkItemRecord) error {
+func (s *BatchStore) CreateWorkItems(ctx context.Context, rec ...*batchstore.WorkItemRecord) error {
 
-	_, err := s.items.InsertOne(ctx, rec)
+	_, err := s.items.InsertMany(ctx, rec)
 	if err != nil {
 		return fmt.Errorf("could not insert work item: %w", err)
 	}
@@ -24,7 +24,7 @@ func (s *BatchStore) GetWorkItem(ctx context.Context, id string) (*batchstore.Wo
 	var item batchstore.WorkItemRecord
 	err := s.items.FindOne(
 		ctx,
-		bson.D{{"id", id}},
+		bson.M{"id": id},
 	).Decode(&item)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve work item: %w", err)
@@ -37,8 +37,8 @@ func (s *BatchStore) UpdateWorkItem(ctx context.Context, rec *batchstore.WorkIte
 
 	_, err := s.items.UpdateOne(
 		ctx,
-		bson.D{{"id", rec.ID}},
-		bson.D{{"$set", rec}},
+		bson.M{"id": rec.ID},
+		bson.M{"$set": rec},
 	)
 	if err != nil {
 		return fmt.Errorf("could not update work item: %w", err)
@@ -47,14 +47,12 @@ func (s *BatchStore) UpdateWorkItem(ctx context.Context, rec *batchstore.WorkIte
 	return nil
 }
 
-func (s *BatchStore) UpdateWorkItemStatus(ctx context.Context, id string, status int32) error {
+func (s *BatchStore) UpdateWorkItemStatus(ctx context.Context, status int32, ids ...string) error {
 
-	_, err := s.items.UpdateOne(
+	_, err := s.items.UpdateMany(
 		ctx,
-		bson.D{{"id", id}},
-		bson.D{{
-			"$set",
-			bson.D{{"status", status}}}},
+		bson.M{"id": bson.M{"$in": ids}},
+		bson.M{"$set": bson.M{"status": status}},
 	)
 	if err != nil {
 		return fmt.Errorf("could not update work item: %w", err)
@@ -63,9 +61,12 @@ func (s *BatchStore) UpdateWorkItemStatus(ctx context.Context, id string, status
 	return nil
 }
 
-func (s *BatchStore) DeleteWorkItem(ctx context.Context, id string) error {
+func (s *BatchStore) DeleteWorkItems(ctx context.Context, ids ...string) error {
 
-	_, err := s.items.DeleteOne(ctx, bson.D{{"id", id}})
+	_, err := s.items.DeleteMany(
+		ctx,
+		bson.M{"id": bson.M{"$in": ids}},
+	)
 	if err != nil {
 		return fmt.Errorf("could not delete work item: %w", err)
 	}

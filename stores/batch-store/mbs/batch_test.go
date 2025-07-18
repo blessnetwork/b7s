@@ -20,9 +20,10 @@ import (
 
 const (
 	MongoDBConnectionEnv = "B7S_MONGO_DB_ADDRESS"
+	MongoDBName          = "B7S_MONGO_DB_NAME"
 )
 
-func TestBatchStore(t *testing.T) {
+func TestBatchStore_Batch(t *testing.T) {
 
 	var (
 		client = getDBClient(t)

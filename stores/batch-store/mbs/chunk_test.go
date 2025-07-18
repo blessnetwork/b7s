@@ -8,18 +8,18 @@ import (
 	"math/rand/v2"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 	"github.com/blessnetwork/b7s/stores/batch-store/mbs"
 )
 
-func TestChunkStore(t *testing.T) {
+func TestBatchStore_Chunks(t *testing.T) {
 
 	var (
-		client = getDBClient(t)
-		ctx    = t.Context()
+		client      = getDBClient(t)
+		ctx         = t.Context()
+		recordCount = 10
 	)
 
 	store, err := mbs.NewBatchStore(client)
@@ -28,28 +28,38 @@ func TestChunkStore(t *testing.T) {
 	err = store.Init(ctx)
 	require.NoError(t, err)
 
-	chunk := batchstore.ChunkRecord{
-		ID:        uuid.NewString(),
-		RequestID: "test-request-id",
-		Status:    0,
+	chunks := newChunks(t, recordCount)
+	ids := make([]string, len(chunks))
+	for i, chunk := range chunks {
+		ids[i] = chunk.ID
 	}
 
-	t.Run("create", func(t *testing.T) {
-
-		err = store.CreateChunk(ctx, &chunk)
+	t.Run("create single chunk", func(t *testing.T) {
+		err = store.CreateChunks(ctx, chunks[0])
 		require.NoError(t, err)
 	})
-	t.Run("get", func(t *testing.T) {
-
-		id := chunk.ID
-		retrieved, err := store.GetChunk(ctx, id)
+	t.Run("create many chunks", func(t *testing.T) {
+		err = store.CreateChunks(ctx, chunks[1:]...)
 		require.NoError(t, err)
-		require.Equal(t, chunk, *retrieved)
+	})
+	t.Run("get chunk", func(t *testing.T) {
+
+		for i, chunk := range chunks {
+
+			id := chunk.ID
+
+			retrieved, err := store.GetChunk(ctx, id)
+			require.NoError(t, err)
+			require.Equal(t, chunks[i], retrieved)
+		}
+
 	})
 	t.Run("update", func(t *testing.T) {
 
-		copy := chunk
-		copy.RequestID = chunk.RequestID + fmt.Sprint(rand.Int())
+		orig := chunks[0]
+
+		copy := *orig
+		copy.RequestID = copy.RequestID + fmt.Sprint(rand.Int32N(10))
 
 		err = store.UpdateChunk(ctx, &copy)
 		require.NoError(t, err)
@@ -61,23 +71,57 @@ func TestChunkStore(t *testing.T) {
 	})
 	t.Run("update status", func(t *testing.T) {
 
-		status := rand.Int32N(11)
+		var (
+			chunkID = ids[0]
+			status  = rand.Int32()
+		)
 
-		err = store.UpdateChunkStatus(ctx, chunk.ID, status)
+		err = store.UpdateChunkStatus(ctx, status, chunkID)
 		require.NoError(t, err)
 
-		retrieved, err := store.GetChunk(ctx, chunk.ID)
+		// Verify change of first chunk.
+		retrieved, err := store.GetChunk(ctx, chunkID)
 		require.NoError(t, err)
-
 		require.Equal(t, status, retrieved.Status)
-		// TODO: Remaining fields should be unchanged equal.
 	})
-	t.Run("delete", func(t *testing.T) {
+	t.Run("update multiple statuses", func(t *testing.T) {
 
-		err = store.DeleteChunk(ctx, chunk.ID)
+		var (
+			status = rand.Int32()
+		)
+
+		err = store.UpdateChunkStatus(ctx, status, ids...)
 		require.NoError(t, err)
 
-		_, err := store.GetChunk(ctx, chunk.ID)
-		require.Error(t, err)
+		for _, id := range ids {
+			retrieved, err := store.GetChunk(ctx, id)
+			require.NoError(t, err)
+			require.Equal(t, status, retrieved.Status)
+		}
 	})
+	t.Run("delete chunks", func(t *testing.T) {
+
+		err = store.DeleteChunks(ctx, ids...)
+		require.NoError(t, err)
+
+		for _, chunk := range chunks {
+			// Retrieving chunks should fail as they are deleted by now.
+			_, err := store.GetChunk(ctx, chunk.ID)
+			require.Error(t, err)
+		}
+	})
+}
+
+func newChunks(t *testing.T, n int) []*batchstore.ChunkRecord {
+
+	chunks := make([]*batchstore.ChunkRecord, n)
+	for i := range n {
+		chunks[i] = &batchstore.ChunkRecord{
+			ID:        fmt.Sprintf("test.chunk-%v", rand.Int()),
+			RequestID: fmt.Sprintf("test-request-id-%v", rand.Int()),
+			Status:    0,
+		}
+	}
+
+	return chunks
 }

@@ -8,9 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (s *BatchStore) CreateChunk(ctx context.Context, chunk *batchstore.ChunkRecord) error {
+func (s *BatchStore) CreateChunks(ctx context.Context, chunk ...*batchstore.ChunkRecord) error {
 
-	_, err := s.chunks.InsertOne(ctx, chunk)
+	_, err := s.chunks.InsertMany(ctx, chunk)
 	if err != nil {
 		return fmt.Errorf("could not save chunk: %w", err)
 	}
@@ -23,7 +23,7 @@ func (s *BatchStore) GetChunk(ctx context.Context, id string) (*batchstore.Chunk
 	var rec batchstore.ChunkRecord
 	err := s.chunks.FindOne(
 		ctx,
-		bson.D{{"id", id}},
+		bson.M{"id": id},
 	).Decode(&rec)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve chunk: %w", err)
@@ -36,8 +36,8 @@ func (s *BatchStore) UpdateChunk(ctx context.Context, rec *batchstore.ChunkRecor
 
 	_, err := s.chunks.UpdateOne(
 		ctx,
-		bson.D{{"id", rec.ID}},
-		bson.D{{"$set", rec}},
+		bson.M{"id": rec.ID},
+		bson.M{"$set": rec},
 	)
 	if err != nil {
 		return fmt.Errorf("could not update chunk: %w", err)
@@ -46,13 +46,12 @@ func (s *BatchStore) UpdateChunk(ctx context.Context, rec *batchstore.ChunkRecor
 	return nil
 }
 
-func (s *BatchStore) UpdateChunkStatus(ctx context.Context, id string, status int32) error {
+func (s *BatchStore) UpdateChunkStatus(ctx context.Context, status int32, ids ...string) error {
 
-	_, err := s.chunks.UpdateOne(
+	_, err := s.chunks.UpdateMany(
 		ctx,
-		bson.D{{"id", id}},
-		bson.D{{"$set",
-			bson.D{{"status", status}}}},
+		bson.M{"id": bson.M{"$in": ids}},
+		bson.M{"$set": bson.M{"status": status}},
 	)
 	if err != nil {
 		return fmt.Errorf("could not update chunk: %w", err)
@@ -61,11 +60,12 @@ func (s *BatchStore) UpdateChunkStatus(ctx context.Context, id string, status in
 	return nil
 }
 
-func (s *BatchStore) DeleteChunk(ctx context.Context, id string) error {
+func (s *BatchStore) DeleteChunks(ctx context.Context, ids ...string) error {
 
-	_, err := s.chunks.DeleteOne(
+	_, err := s.chunks.DeleteMany(
 		ctx,
-		bson.D{{"id", id}})
+		bson.M{"id": bson.M{"$in": ids}},
+	)
 	if err != nil {
 		return fmt.Errorf("could not delete chunk: %w", err)
 	}
