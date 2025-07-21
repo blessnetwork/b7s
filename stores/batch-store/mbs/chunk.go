@@ -8,9 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (s *BatchStore) CreateChunks(ctx context.Context, chunk ...*batchstore.ChunkRecord) error {
+func (s *BatchStore) CreateChunks(ctx context.Context, chunks ...*batchstore.ChunkRecord) error {
 
-	_, err := s.chunks.InsertMany(ctx, chunk)
+	_, err := s.chunks.InsertMany(ctx, chunks)
 	if err != nil {
 		return fmt.Errorf("could not save chunk: %w", err)
 	}

@@ -4,6 +4,15 @@ import (
 	"context"
 )
 
+type Status int32
+
+const (
+	StatusCreated    = 0
+	StatusInProgress = 1
+	StatusFailed     = -1
+	StatusDone       = 100
+)
+
 type Store interface {
 	BatchStore
 	ChunkStore
@@ -23,10 +32,10 @@ type BatchStore interface {
 type ChunkStore interface {
 	CreateChunks(ctx context.Context, rec ...*ChunkRecord) error
 	GetChunk(ctx context.Context, id string) (*ChunkRecord, error)
-	// GetChunks(ctx context.Context, ids ...string) ([]*ChunkRecord, error)
 	UpdateChunk(ctx context.Context, rec *ChunkRecord) error
 	UpdateChunkStatus(ctx context.Context, status int32, ids ...string) error
 	DeleteChunks(ctx context.Context, ids ...string) error
+	GetBatchChunks(ctx context.Context, batchID string) ([]*ChunkRecord, error)
 }
 
 type WorkItemStore interface {
@@ -35,4 +44,10 @@ type WorkItemStore interface {
 	UpdateWorkItem(ctx context.Context, rec *WorkItemRecord) error
 	UpdateWorkItemStatus(ctx context.Context, status int32, ids ...string) error
 	DeleteWorkItems(ctx context.Context, ids ...string) error
+	AssignWorkItems(ctx context.Context, chunkID string, ids ...string) error
+	GetBatchWorkItems(ctx context.Context, batchID string) ([]*WorkItemRecord, error)
+	GetChunkWorkItems(ctx context.Context, chunkID string) ([]*WorkItemRecord, error)
+	GetBatchIncompleteWorkItems(ctx context.Context, batchID string) ([]*WorkItemRecord, error)
+
+	// TODO: Perhaps create a single GetWorkItems function that accepts a query.
 }

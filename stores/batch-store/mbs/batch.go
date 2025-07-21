@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
+// TODO: Handle timestamps correctly.
+
 func (s *BatchStore) CreateBatch(ctx context.Context, rec *batchstore.ExecuteBatchRecord) error {
 
 	_, err := s.batches.InsertOne(ctx, rec)

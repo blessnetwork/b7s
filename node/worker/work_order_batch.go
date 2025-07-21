@@ -23,7 +23,7 @@ type StrandResult struct {
 func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req request.WorkOrderBatch) error {
 
 	requestID := req.RequestID
-	strandID := req.StrandID
+	strandID := req.ChunkID
 
 	log := w.Log().With().
 		Str("request", requestID).
@@ -49,7 +49,7 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 			Config:     req.Template.Config,
 			Arguments:  args,
 		}
-		_, result, err := w.execute(ctx, req.StrandID, time.Now(), er, from)
+		_, result, err := w.execute(ctx, req.ChunkID, time.Now(), er, from)
 		if err != nil {
 			log.Error().Err(err).Stringer("peer", from).Msg("execution failed")
 		}
@@ -59,9 +59,9 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 			log.Error().Err(err).Msg("could not get metadata from the execution result")
 		}
 
-		chunkID := execute.GetExecutionID(er)
+		chunkID := er.GetExecutionID()
 		results[chunkID] = &response.BatchFunctionResult{
-			FunctionInvocation: execute.FunctionInvocation(er),
+			FunctionInvocation: execute.FunctionInvocation(er.FunctionID, er.Method),
 			Arguments:          args,
 			NodeResult: execute.NodeResult{
 				Result:   result,
@@ -72,7 +72,7 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 
 	res := response.WorkOrderBatch{
 		RequestID: req.RequestID,
-		StrandID:  req.StrandID,
+		StrandID:  req.ChunkID,
 		Results:   results,
 	}
 	err := w.Send(ctx, from, res)

@@ -12,6 +12,7 @@ import (
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
+	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
 type ExecutionBatchAssignments map[peer.ID]*request.WorkOrderBatch
@@ -33,6 +34,12 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 		Int("size", len(req.Arguments)).Logger()
 
 	log.Info().Msg("received a batch request")
+
+	// XXX: Saves batch and work items.
+	err := h.saveBatch(requestID, req)
+	if err != nil {
+		return fmt.Errorf("could not save batch request: %w", err)
+	}
 
 	results, err := h.executeBatch(ctx, requestID, req)
 	if err != nil {
@@ -74,6 +81,7 @@ func (h *HeadNode) executeBatch(
 
 	// Phase 1. - Issue roll call to nodes.
 
+	// TODO: Add a boolean for batch requests so "old" nodes don't apply.
 	rc := rollCallRequest(req.Template.FunctionID, requestID, 0, req.Template.Config.Attributes)
 
 	rctx, cancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
@@ -90,6 +98,14 @@ func (h *HeadNode) executeBatch(
 		Msg("peers reported for work")
 
 	assignments := partitionWorkBatch(peers, requestID, req)
+
+	// XXX:
+	// 1. create chunks in the DB
+	// 2. update work items to contain chunk information to which they are assigned to.
+	err = h.saveChunkInfo(requestID, assignments)
+	if err != nil {
+		return nil, fmt.Errorf("could not save chunks: %w", err)
+	}
 
 	// TODO: Rethink, useful but ugly.
 	logAssignments(&log, assignments)
@@ -108,6 +124,12 @@ func (h *HeadNode) executeBatch(
 		return nil, fmt.Errorf("could not send work order batch: %w", err)
 	}
 
+	// XXX: Assumes successful delivery of all.
+	err = h.updateChunkStatus(requestID, assignments, batchstore.StatusInProgress)
+	if err != nil {
+		return nil, fmt.Errorf("could not mark chunks as in-progress: %w", err)
+	}
+
 	// TODO: Handle errors - reintroduce to the pool.
 
 	// Wait for results.
@@ -118,7 +140,7 @@ func (h *HeadNode) executeBatch(
 	defer cancel()
 
 	keyfunc := func(id peer.ID) string {
-		return peerStrandKey(requestID, assignments[id].StrandID, id)
+		return peerStrandKey(requestID, assignments[id].ChunkID, id)
 	}
 
 	batchResults := gatherPeerMessages(
@@ -145,7 +167,13 @@ func (h *HeadNode) executeBatch(
 				res.StrandID)
 		}
 
-		strandResults[assignment.StrandID] = sr
+		strandResults[assignment.ChunkID] = sr
+	}
+
+	// XXX: Mark these as complete.
+	err = h.updateChunkStatus(requestID, assignments, batchstore.StatusDone)
+	if err != nil {
+		return nil, fmt.Errorf("could not mark chunks as complete: %w", err)
 	}
 
 	return strandResults, nil

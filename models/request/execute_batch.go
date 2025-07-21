@@ -48,7 +48,7 @@ func (e ExecuteBatch) WorkOrderBatch(requestID string, strandID string, argument
 	w := &WorkOrderBatch{
 		BaseMessage:      bls.BaseMessage{TraceInfo: e.TraceInfo},
 		RequestID:        requestID,
-		StrandID:         strandID,
+		ChunkID:          strandID,
 		Template:         e.Template,
 		Arguments:        arguments,
 		ConcurrencyLimit: e.WorkerConcurrencyLimit,

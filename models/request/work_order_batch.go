@@ -17,7 +17,7 @@ type WorkOrderBatch struct {
 	// Technically workers don't need to know the request ID.
 	// But for easier troubleshooting, at least for now, it's okay.
 	RequestID        string     `json:"request_id,omitempty"`
-	StrandID         string     `json:"strand_id,omitempty"`
+	ChunkID          string     `json:"chunk_id,omitempty"`
 	Arguments        [][]string `json:"arguments,omitempty"`
 	ConcurrencyLimit uint       `json:"concurrency_limit,omitempty"`
 }
@@ -53,7 +53,7 @@ func (w WorkOrderBatch) Valid() error {
 		multierr = multierror.Append(multierr, errors.New("request ID is required"))
 	}
 
-	if w.StrandID == "" {
+	if w.ChunkID == "" {
 		multierr = multierror.Append(multierr, errors.New("strand ID is required"))
 	}
 

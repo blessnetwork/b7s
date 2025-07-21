@@ -22,10 +22,10 @@ import (
 // Keep track of assignments of chunks to workers
 
 type ExecuteBatchRecord struct {
-	ID     string         `bson:"id,omitempty"`
-	CID    string         `bson:"cid,omitempty"`
-	Method string         `bson:"method,omitempty"`
-	Config map[string]any `bson:"config,omitempty"`
+	ID     string `bson:"id,omitempty"`
+	CID    string `bson:"cid,omitempty"`
+	Method string `bson:"method,omitempty"`
+	Config any    `bson:"config,omitempty"`
 
 	// Values:
 	// - in progress
