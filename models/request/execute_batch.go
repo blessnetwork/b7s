@@ -42,13 +42,13 @@ func (e ExecuteBatch) RollCall(id string) *RollCall {
 	}
 }
 
-func (e ExecuteBatch) WorkOrderBatch(requestID string, strandID string, arguments ...[]string) *WorkOrderBatch {
+func (e ExecuteBatch) WorkOrderBatch(requestID string, chunkID string, arguments ...[]string) *WorkOrderBatch {
 
 	// TBD: Implement.
 	w := &WorkOrderBatch{
 		BaseMessage:      bls.BaseMessage{TraceInfo: e.TraceInfo},
 		RequestID:        requestID,
-		ChunkID:          strandID,
+		ChunkID:          chunkID,
 		Template:         e.Template,
 		Arguments:        arguments,
 		ConcurrencyLimit: e.WorkerConcurrencyLimit,

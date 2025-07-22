@@ -223,16 +223,16 @@ func (h *HeadNode) processWorkOrderBatchResponse(ctx context.Context, from peer.
 	h.Log().Debug().
 		Stringer("from", from).
 		Str("request", res.RequestID).
-		Str("strand", res.StrandID).
+		Str("chunk", res.ChunkID).
 		Msg("received work order batch response")
 
-	key := peerStrandKey(res.RequestID, res.StrandID, from)
+	key := peerChunkKey(res.RequestID, res.ChunkID, from)
 	h.workOrderBatchResponses.Set(key, res)
 
 	return nil
 }
 
-func peerStrandKey(requestID string, _ string, peer peer.ID) string {
+func peerChunkKey(requestID string, _ string, peer peer.ID) string {
 	return requestID + "/" + peer.String()
 }
 

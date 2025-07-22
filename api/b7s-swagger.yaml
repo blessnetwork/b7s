@@ -585,15 +585,15 @@ components:
           description: If the Batch Execution Request failed, this message might have more info about the error
           type: string
           x-go-type-skip-optional-pointer: true
-        strands:
+        chunk:
           description: Results of the execution of the Batch Request, executed by different nodes
           x-go-type-skip-optional-pointer: true
           additionalProperties:
-            $ref: '#/components/schemas/StrandResults'
+            $ref: '#/components/schemas/ChunkResults'
 
-    StrandResults:
+    ChunkResults:
       type: object
-      x-go-type: response.NodeStrandResults
+      x-go-type: response.NodeChunkResults
       x-go-type-import:
         path: github.com/blessnetwork/b7s/models/response
       properties:

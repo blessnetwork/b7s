@@ -12,7 +12,6 @@ import (
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
-	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
 type ExecutionBatchAssignments map[peer.ID]*request.WorkOrderBatch
@@ -59,7 +58,7 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 	return nil
 }
 
-type batchResults map[string]response.NodeStrandResults
+type batchResults map[string]response.NodeChunkResults
 
 func (h *HeadNode) executeBatch(
 	ctx context.Context,
@@ -99,6 +98,8 @@ func (h *HeadNode) executeBatch(
 
 	assignments := partitionWorkBatch(peers, requestID, req)
 
+	// TODO: Perhaps we don't do this at all before chunks are actually sent?
+
 	// XXX:
 	// 1. create chunks in the DB
 	// 2. update work items to contain chunk information to which they are assigned to.
@@ -110,6 +111,7 @@ func (h *HeadNode) executeBatch(
 	// TODO: Rethink, useful but ugly.
 	logAssignments(&log, assignments)
 
+	var failedDeliveries []peer.ID
 	err = h.sendBatch(ctx, assignments)
 	if err != nil {
 
@@ -119,13 +121,15 @@ func (h *HeadNode) executeBatch(
 			log.Warn().
 				Strs("peers", bls.PeerIDsToStr(sendErr.Targets())).
 				Msg("partial failure to send batch requst")
+
+			failedDeliveries = sendErr.Targets()
 		}
 
 		return nil, fmt.Errorf("could not send work order batch: %w", err)
 	}
 
 	// XXX: Assumes successful delivery of all.
-	err = h.updateChunkStatus(requestID, assignments, batchstore.StatusInProgress)
+	err = h.markStartedChunks(requestID, assignments, failedDeliveries)
 	if err != nil {
 		return nil, fmt.Errorf("could not mark chunks as in-progress: %w", err)
 	}
@@ -140,7 +144,7 @@ func (h *HeadNode) executeBatch(
 	defer cancel()
 
 	keyfunc := func(id peer.ID) string {
-		return peerStrandKey(requestID, assignments[id].ChunkID, id)
+		return peerChunkKey(requestID, assignments[id].ChunkID, id)
 	}
 
 	batchResults := gatherPeerMessages(
@@ -150,10 +154,10 @@ func (h *HeadNode) executeBatch(
 		h.workOrderBatchResponses,
 	)
 
-	strandResults := make(map[string]response.NodeStrandResults)
+	chunkResults := make(map[string]response.NodeChunkResults)
 	for peer, res := range batchResults {
 
-		sr := response.NodeStrandResults{
+		sr := response.NodeChunkResults{
 			Peer:    peer,
 			Results: res.Results,
 		}
@@ -161,22 +165,21 @@ func (h *HeadNode) executeBatch(
 		assignment, ok := assignments[peer]
 		// Should never happen.
 		if !ok {
-			return nil, fmt.Errorf("found a batch result for a peer without assignment (request: %v, peer: %v, reported strand id: %v)",
+			return nil, fmt.Errorf("found a batch result for a peer without assignment (request: %v, peer: %v, reported chunk id: %v)",
 				requestID,
 				peer.String(),
-				res.StrandID)
+				res.ChunkID)
 		}
 
-		strandResults[assignment.ChunkID] = sr
+		chunkResults[assignment.ChunkID] = sr
 	}
 
-	// XXX: Mark these as complete.
-	err = h.updateChunkStatus(requestID, assignments, batchstore.StatusDone)
+	err = h.markCompletedChunks(requestID, chunkResults)
 	if err != nil {
 		return nil, fmt.Errorf("could not mark chunks as complete: %w", err)
 	}
 
-	return strandResults, nil
+	return chunkResults, nil
 }
 
 // generic helpers to get keys from a map. No locking or anything.

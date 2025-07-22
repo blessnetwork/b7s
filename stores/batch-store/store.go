@@ -45,9 +45,7 @@ type WorkItemStore interface {
 	UpdateWorkItemStatus(ctx context.Context, status int32, ids ...string) error
 	DeleteWorkItems(ctx context.Context, ids ...string) error
 	AssignWorkItems(ctx context.Context, chunkID string, ids ...string) error
-	GetBatchWorkItems(ctx context.Context, batchID string) ([]*WorkItemRecord, error)
-	GetChunkWorkItems(ctx context.Context, chunkID string) ([]*WorkItemRecord, error)
-	GetBatchIncompleteWorkItems(ctx context.Context, batchID string) ([]*WorkItemRecord, error)
+	FindWorkItems(ctx context.Context, batchID string, chunkID string, status *int32) ([]*WorkItemRecord, error)
 
 	// TODO: Perhaps create a single GetWorkItems function that accepts a query.
 }

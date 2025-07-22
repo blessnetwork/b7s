@@ -37,7 +37,7 @@ func (a *API) ExecuteFunctionBatch(ctx echo.Context) error {
 		RequestId: res.RequestID,
 		Code:      res.Code.String(),
 		Message:   res.ErrorMessage,
-		Strands:   res.Strands,
+		Chunks:    res.Chunks,
 	}
 
 	return ctx.JSON(http.StatusOK, out)

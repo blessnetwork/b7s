@@ -27,7 +27,7 @@ type HeadNode struct {
 
 func New(core node.Core, options ...Option) (*HeadNode, error) {
 
-	// InitiaStrandResultsize config.
+	// InitiaChunkResultsize config.
 	cfg := DefaultConfig
 	for _, option := range options {
 		option(&cfg)

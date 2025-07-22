@@ -14,9 +14,9 @@ type WorkOrderBatch struct {
 	// It will help with debugging right now so let's leave it be.
 	RequestID string
 
-	// NOTE: We have redundancy here as strand ID is <request-id>:<uuid>.
+	// NOTE: We have redundancy here as chunk ID is <request-id>:<uuid>.
 	// However, this might change too in the future.
-	StrandID string
+	ChunkID string
 
 	Results BatchResults
 }

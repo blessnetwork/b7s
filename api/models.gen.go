@@ -30,6 +30,9 @@ type BatchExecutionRequest struct {
 
 // BatchExecutionResponse defines model for BatchExecutionResponse.
 type BatchExecutionResponse struct {
+	// Chunk Results of the execution of the Batch Request, executed by different nodes
+	Chunk map[string]ChunkResults `json:"chunk,omitempty"`
+
 	// Code Status of the batch execution
 	Code string `json:"code,omitempty"`
 
@@ -38,10 +41,10 @@ type BatchExecutionResponse struct {
 
 	// RequestId ID of the Execution Request
 	RequestId string `json:"request_id,omitempty"`
-
-	// Strands Results of the execution of the Batch Request, executed by different nodes
-	Strands map[string]StrandResults `json:"strands,omitempty"`
 }
+
+// ChunkResults defines model for ChunkResults.
+type ChunkResults = response.NodeChunkResults
 
 // ExecutionConfig Configuration options for the Execution Request
 type ExecutionConfig = execute.Config
@@ -131,9 +134,6 @@ type ResultAggregation = execute.ResultAggregation
 
 // RuntimeConfig Configuration options for the Bless Runtime
 type RuntimeConfig = execute.BLSRuntimeConfig
-
-// StrandResults defines model for StrandResults.
-type StrandResults = response.NodeStrandResults
 
 // TemplateExecutionRequest defines model for TemplateExecutionRequest.
 type TemplateExecutionRequest struct {

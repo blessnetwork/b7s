@@ -13,7 +13,7 @@ import (
 )
 
 // TODO: Perhaps move this and keep it in a single place.
-type StrandResult struct {
+type ChunkResult struct {
 	FunctionInvocation string
 	Arguments          []string
 	Result             execute.Result
@@ -23,11 +23,11 @@ type StrandResult struct {
 func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req request.WorkOrderBatch) error {
 
 	requestID := req.RequestID
-	strandID := req.ChunkID
+	chunkID := req.ChunkID
 
 	log := w.Log().With().
 		Str("request", requestID).
-		Str("strand", strandID).
+		Str("chunk", chunkID).
 		Str("function", req.Template.FunctionID).
 		Logger()
 
@@ -72,7 +72,7 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 
 	res := response.WorkOrderBatch{
 		RequestID: req.RequestID,
-		StrandID:  req.ChunkID,
+		ChunkID:   req.ChunkID,
 		Results:   results,
 	}
 	err := w.Send(ctx, from, res)

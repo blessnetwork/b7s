@@ -54,7 +54,7 @@ func (w WorkOrderBatch) Valid() error {
 	}
 
 	if w.ChunkID == "" {
-		multierr = multierror.Append(multierr, errors.New("strand ID is required"))
+		multierr = multierror.Append(multierr, errors.New("chunk ID is required"))
 	}
 
 	if len(w.Arguments) == 0 {

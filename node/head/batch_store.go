@@ -2,15 +2,21 @@ package head
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"slices"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
+	"github.com/blessnetwork/b7s/models/response"
 	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
-	"github.com/libp2p/go-libp2p/core/peer"
 )
+
+// TODO: IDs are getting too big.
+// TODO: RequestHash can be a byte sequence instead of a hash.
 
 func workItemID(batchID string, itemID string) string {
 	return batchID + "/" + itemID
@@ -117,6 +123,86 @@ func (h *HeadNode) updateWorkOrderAssignments(id string, assignments map[peer.ID
 	return nil
 }
 
-func (h *HeadNode) updateChunkStatus(id string, assignments map[peer.ID]*request.WorkOrderBatch, status int32) error {
-	return errors.New("TBD: not implemented")
+func (h *HeadNode) markStartedChunks(id string, assignments map[peer.ID]*request.WorkOrderBatch, ignore []peer.ID) error {
+
+	var multierr *multierror.Error
+	for peer, chunk := range assignments {
+		// Skip chunks to which deliveries failed.
+		if slices.Contains(ignore, peer) {
+			continue
+		}
+
+		ids := make([]string, len(chunk.Arguments))
+		for i, args := range chunk.Arguments {
+			ids[i] = string(execute.ExecutionID(chunk.Template.FunctionID, chunk.Template.Method, args))
+		}
+
+		err := h.cfg.BatchStore.UpdateWorkItemStatus(context.TODO(), batchstore.StatusInProgress, ids...)
+		if err != nil {
+			multierr = multierror.Append(multierr, err)
+		}
+	}
+
+	return multierr.ErrorOrNil()
+}
+
+func (h *HeadNode) markCompletedChunks(id string, chunkResults map[string]response.NodeChunkResults) error {
+
+	// Group resulting work items by status so we can update them in batches.
+	statuses := make(map[batchstore.Status][]string)
+	for chunkID, res := range chunkResults {
+
+		for itemID, itemResult := range res.Results {
+
+			status := exitCodeToBatchStoreStatus(itemResult.Result.Result.ExitCode)
+
+			h.Log().Debug().
+				Str("batch", id).
+				Str("chunk", chunkID).
+				Str("item_id", string(itemID)).
+				Int32("status", int32(status)).
+				Int("exit_code", itemResult.Result.Result.ExitCode).
+				Msg("processing chunk work item")
+
+			_, ok := statuses[status]
+			if !ok {
+				statuses[status] = make([]string, 0, 10)
+			}
+
+			statuses[status] = append(statuses[status], string(itemID))
+		}
+	}
+
+	var err *multierror.Error
+
+	for status, ids := range statuses {
+
+		log := h.Log().
+			With().
+			Str("batch", id).
+			Int32("status", int32(status)).
+			Strs("items", ids).
+			Logger()
+
+		log.Debug().Msg("updating work item status in batch store")
+
+		err := h.cfg.BatchStore.UpdateWorkItemStatus(context.TODO(), int32(status), ids...)
+		if err != nil {
+			// Logging AND returning the message here but extra context is useful
+			log.Error().Err(err).Msg("could not update work item status")
+
+			err = multierror.Append(err, fmt.Errorf("could not update work item status: %w", err))
+		}
+	}
+
+	return err.ErrorOrNil()
+}
+
+func exitCodeToBatchStoreStatus(e int) batchstore.Status {
+	switch e {
+	case 0:
+		return batchstore.StatusDone
+	default:
+		return batchstore.StatusFailed
+	}
 }

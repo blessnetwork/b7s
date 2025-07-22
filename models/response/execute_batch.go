@@ -13,21 +13,21 @@ var _ (json.Marshaler) = (*ExecuteBatch)(nil)
 // Execute describes the response to the `MessageExecuteBatch` message.
 type ExecuteBatch struct {
 	bls.BaseMessage
-	RequestID string                       `json:"request_id,omitempty"`
-	Code      codes.Code                   `json:"code,omitempty"`
-	Strands   map[string]NodeStrandResults `json:"strands,omitempty"`
+	RequestID string                      `json:"request_id,omitempty"`
+	Code      codes.Code                  `json:"code,omitempty"`
+	Chunks    map[string]NodeChunkResults `json:"chunks,omitempty"`
 
 	// Used to communicate the reason for failure to the user.
 	ErrorMessage string `json:"message,omitempty"`
 }
 
-type NodeStrandResults struct {
+type NodeChunkResults struct {
 	Peer    peer.ID      `json:"peer,omitempty"`
 	Results BatchResults `json:"results,omitempty"`
 }
 
-func (e *ExecuteBatch) WithResults(strands map[string]NodeStrandResults) *ExecuteBatch {
-	e.Strands = strands
+func (e *ExecuteBatch) WithResults(chunks map[string]NodeChunkResults) *ExecuteBatch {
+	e.Chunks = chunks
 	return e
 }
 
