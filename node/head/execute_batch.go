@@ -10,8 +10,10 @@ import (
 
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
+	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
+	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
 type ExecutionBatchAssignments map[peer.ID]*request.WorkOrderBatch
@@ -34,7 +36,7 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 
 	log.Info().Msg("received a batch request")
 
-	// XXX: Saves batch and work items.
+	// Persist batch and work items.
 	err := h.saveBatch(requestID, req)
 	if err != nil {
 		return fmt.Errorf("could not save batch request: %w", err)
@@ -80,8 +82,7 @@ func (h *HeadNode) executeBatch(
 
 	// Phase 1. - Issue roll call to nodes.
 
-	// TODO: Add a boolean for batch requests so "old" nodes don't apply.
-	rc := rollCallRequest(req.Template.FunctionID, requestID, 0, req.Template.Config.Attributes)
+	rc := rollCallRequest(req.Template.FunctionID, requestID, 0, req.Template.Config.Attributes, true)
 
 	rctx, cancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
 	defer cancel()
@@ -128,7 +129,6 @@ func (h *HeadNode) executeBatch(
 		return nil, fmt.Errorf("could not send work order batch: %w", err)
 	}
 
-	// XXX: Assumes successful delivery of all.
 	err = h.markStartedChunks(requestID, assignments, failedDeliveries)
 	if err != nil {
 		return nil, fmt.Errorf("could not mark chunks as in-progress: %w", err)
@@ -209,4 +209,87 @@ func logAssignments(log *zerolog.Logger, assignments map[peer.ID]*request.WorkOr
 				Msg("work order variant")
 		}
 	}
+}
+
+// Collect any work items for the batch that have not been executed yet and start their execution again.
+func (h *HeadNode) continueBatchExecution(ctx context.Context, requestID string) error {
+
+	log := h.Log().With().
+		Str("request", requestID).
+		Logger()
+
+	log.Info().Msg("continuing batch execution")
+
+	batch, err := h.cfg.BatchStore.GetBatch(ctx, requestID)
+	if err != nil {
+		return fmt.Errorf("could not retrieve batch: %w", err)
+	}
+
+	// NOTE: Perhaps we should not trust this flag.
+	if batch.Status == batchstore.StatusDone {
+		log.Info().Msg("batch reported as completed, stopping")
+		return nil
+	}
+
+	// We want to restart execution of failed items, or those that were created but not started
+	items, err := h.cfg.BatchStore.FindWorkItems(ctx, requestID, "", batchstore.StatusCreated, batchstore.StatusFailed)
+	if err != nil {
+		return fmt.Errorf("could not retrieve work items for batch (batch:%v): %w", requestID, err)
+	}
+
+	threshold := min(h.cfg.BatchWorkItemMaxAttempts, batch.MaxAttempts)
+	pending, permaFailed := filterWorkItems(items, threshold)
+
+	go func(ctx context.Context) {
+		formatWorkRecordIDs := func(items []*batchstore.WorkItemRecord) []string {
+			ids := make([]string, 0, len(items))
+			for i, item := range items {
+				ids[i] = workItemID(requestID, string(execute.ExecutionID(batch.CID, batch.Method, item.Arguments)))
+			}
+
+			return ids
+		}
+		err = h.cfg.BatchStore.UpdateWorkItemStatus(ctx, batchstore.StatusPermanentlyFailed, formatWorkRecordIDs(permaFailed)...)
+		if err != nil {
+			log.Error().Err(err).Msg("could not mark items as permanently failed")
+		}
+	}(ctx)
+
+	// TODO: Do we need the return value?
+	_, err = h.executeBatch(ctx, requestID, batchRecordToRequest(batch, pending))
+	if err != nil {
+		return fmt.Errorf("could not continue batch execution: %w", err)
+	}
+
+	return nil
+}
+
+// Split work item list into two categories:
+// pending - created or failed ones
+// perma failed - items that failed execution N times
+func filterWorkItems(items []*batchstore.WorkItemRecord, threshold uint32) ([]*batchstore.WorkItemRecord, []*batchstore.WorkItemRecord) {
+
+	var (
+		pending     = make([]*batchstore.WorkItemRecord, 0, len(items))
+		permaFailed []*batchstore.WorkItemRecord
+	)
+
+	for _, item := range items {
+
+		switch item.Status {
+		case batchstore.StatusCreated:
+			pending = append(pending, item)
+
+		case batchstore.StatusFailed:
+
+			if item.Attempts >= uint32(threshold) {
+				permaFailed = append(permaFailed, item)
+				continue
+			}
+
+			pending = append(pending, item)
+		}
+	}
+
+	return pending, permaFailed
 }

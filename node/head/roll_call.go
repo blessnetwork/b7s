@@ -69,12 +69,14 @@ rollCallResponseLoop:
 
 		case reply := <-h.rollCall.responses(requestID):
 
-			// Check if this is the reply we want - shouldn't really happen.
-			if reply.FunctionID != rc.FunctionID {
+			// Check if this is the reply we want - should be the same function and node should report if they
+			// support batch executions.
+			if reply.FunctionID != rc.FunctionID || reply.BatchSupport != rc.Batch {
 				log.Info().
 					Stringer("peer", reply.From).
 					Str("function_got", reply.FunctionID).
-					Msg("skipping inadequate roll call response - wrong function")
+					Bool("batch_support", reply.BatchSupport).
+					Msg("skipping inadequate roll call response")
 				continue
 			}
 
@@ -160,12 +162,13 @@ func (h *HeadNode) processRollCallResponse(ctx context.Context, from peer.ID, re
 }
 
 // TODO: RollCall must have trace info propagated.
-func rollCallRequest(function string, id string, c consensus.Type, attributes *execute.Attributes) *request.RollCall {
+func rollCallRequest(function string, id string, c consensus.Type, attributes *execute.Attributes, batch bool) *request.RollCall {
 	return &request.RollCall{
 		// BaseMessage: bls.BaseMessage{TraceInfo: req.TraceInfo},
 		RequestID:  id,
 		FunctionID: function,
 		Consensus:  c,
 		Attributes: attributes,
+		Batch:      batch,
 	}
 }

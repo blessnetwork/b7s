@@ -2,6 +2,7 @@ package mbs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
@@ -30,6 +31,10 @@ func (s *BatchStore) GetChunk(ctx context.Context, id string) (*batchstore.Chunk
 	}
 
 	return &rec, nil
+}
+
+func (s *BatchStore) GetBatchChunks(ctx context.Context, batchID string) ([]*batchstore.ChunkRecord, error) {
+	return nil, errors.New("TBD: not implemented")
 }
 
 func (s *BatchStore) UpdateChunk(ctx context.Context, rec *batchstore.ChunkRecord) error {

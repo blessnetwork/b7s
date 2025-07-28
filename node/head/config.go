@@ -12,10 +12,11 @@ type Option func(*Config)
 
 // DefaultConfig represents the default settings for the node.
 var DefaultConfig = Config{
-	RollCallTimeout:         DefaultRollCallTimeout,
-	ExecutionTimeout:        DefaultExecutionTimeout,
-	ClusterFormationTimeout: DefaultClusterFormationTimeout,
-	DefaultConsensus:        DefaultConsensusAlgorithm,
+	RollCallTimeout:          DefaultRollCallTimeout,
+	ExecutionTimeout:         DefaultExecutionTimeout,
+	ClusterFormationTimeout:  DefaultClusterFormationTimeout,
+	DefaultConsensus:         DefaultConsensusAlgorithm,
+	BatchWorkItemMaxAttempts: DefaultBatchWorkItemMaxAttempts,
 
 	// TODO: Add back in when compatible.
 	// BatchStore:              ibs.NewBatchStore(),
@@ -23,11 +24,12 @@ var DefaultConfig = Config{
 
 // Config represents the Node configuration.
 type Config struct {
-	RollCallTimeout         time.Duration    // How long do we wait for roll call responses.
-	ExecutionTimeout        time.Duration    // How long does the head node wait for worker nodes to send their execution results.
-	ClusterFormationTimeout time.Duration    // How long do we wait for the nodes to form a cluster for an execution.
-	DefaultConsensus        consensus.Type   // Default consensus algorithm to use.
-	BatchStore              batchstore.Store // Batch store for persisting batch requests
+	RollCallTimeout          time.Duration    // How long do we wait for roll call responses.
+	ExecutionTimeout         time.Duration    // How long does the head node wait for worker nodes to send their execution results.
+	ClusterFormationTimeout  time.Duration    // How long do we wait for the nodes to form a cluster for an execution.
+	DefaultConsensus         consensus.Type   // Default consensus algorithm to use.
+	BatchStore               batchstore.Store // Batch store for persisting batch requests
+	BatchWorkItemMaxAttempts uint32           // How many times shoud node retry executing a work item before it gives up.
 }
 
 // BatchStore sets the batch store to be used by the head node.

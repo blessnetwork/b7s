@@ -30,8 +30,8 @@ type BatchExecutionRequest struct {
 
 // BatchExecutionResponse defines model for BatchExecutionResponse.
 type BatchExecutionResponse struct {
-	// Chunk Results of the execution of the Batch Request, executed by different nodes
-	Chunk map[string]ChunkResults `json:"chunk,omitempty"`
+	// Chunks Results of the execution of the Batch Request, executed by different nodes
+	Chunks map[string]ChunkResults `json:"chunks,omitempty"`
 
 	// Code Status of the batch execution
 	Code string `json:"code,omitempty"`

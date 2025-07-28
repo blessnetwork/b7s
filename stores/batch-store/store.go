@@ -7,10 +7,11 @@ import (
 type Status int32
 
 const (
-	StatusCreated    = 0
-	StatusInProgress = 1
-	StatusFailed     = -1
-	StatusDone       = 100
+	StatusCreated           = 0
+	StatusInProgress        = 1
+	StatusFailed            = -1
+	StatusPermanentlyFailed = -2
+	StatusDone              = 100
 )
 
 type Store interface {
@@ -45,7 +46,7 @@ type WorkItemStore interface {
 	UpdateWorkItemStatus(ctx context.Context, status int32, ids ...string) error
 	DeleteWorkItems(ctx context.Context, ids ...string) error
 	AssignWorkItems(ctx context.Context, chunkID string, ids ...string) error
-	FindWorkItems(ctx context.Context, batchID string, chunkID string, status *int32) ([]*WorkItemRecord, error)
+	FindWorkItems(ctx context.Context, batchID string, chunkID string, statuses ...int32) ([]*WorkItemRecord, error)
 
 	// TODO: Perhaps create a single GetWorkItems function that accepts a query.
 }

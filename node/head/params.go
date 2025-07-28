@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	DefaultRollCallTimeout         = 5 * time.Second
-	DefaultExecutionTimeout        = 20 * time.Second
-	DefaultClusterFormationTimeout = 10 * time.Second
-	DefaultConsensusAlgorithm      = consensus.Raft
+	DefaultRollCallTimeout          = 5 * time.Second
+	DefaultExecutionTimeout         = 20 * time.Second
+	DefaultClusterFormationTimeout  = 10 * time.Second
+	DefaultConsensusAlgorithm       = consensus.Raft
+	DefaultBatchWorkItemMaxAttempts = 10
 
 	rollCallQueueBufferSize  = 1000
 	executionResultCacheSize = 1000

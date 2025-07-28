@@ -18,32 +18,22 @@ import (
 // TODO: IDs are getting too big.
 // TODO: RequestHash can be a byte sequence instead of a hash.
 
+// itemID is a request hash which is derived from what we are tasked to execute. However this does not need
+// to be universally unique. We can have multiple execution requests that are executing the same bless function
+// with the same arguments. Hence we need the batchID as well.
 func workItemID(batchID string, itemID string) string {
 	return batchID + "/" + itemID
 }
 
 func (h *HeadNode) saveBatch(id string, req request.ExecuteBatch) error {
 
-	err := h.createBatch(id, req)
+	batch, items := requestToBatchRecord(id, req)
+
+	batch.Status = batchstore.StatusInProgress
+
+	err := h.cfg.BatchStore.CreateBatch(context.TODO(), batch)
 	if err != nil {
 		return fmt.Errorf("could not persist batch: %w", err)
-	}
-
-	items := make([]*batchstore.WorkItemRecord, len(req.Arguments))
-	for i, args := range req.Arguments {
-
-		itemID := execute.ExecutionID(
-			req.Template.FunctionID,
-			req.Template.Method,
-			args)
-
-		items[i] = &batchstore.WorkItemRecord{
-			ID:        workItemID(id, string(itemID)),
-			RequestID: id,
-			Arguments: args,
-			Status:    0,
-			Attempts:  0,
-		}
 	}
 
 	err = h.cfg.BatchStore.CreateWorkItems(context.TODO(), items...)
@@ -52,19 +42,6 @@ func (h *HeadNode) saveBatch(id string, req request.ExecuteBatch) error {
 	}
 
 	return nil
-}
-
-func (h *HeadNode) createBatch(id string, req request.ExecuteBatch) error {
-
-	rec := batchstore.ExecuteBatchRecord{
-		ID:        id,
-		CID:       req.Template.FunctionID,
-		Method:    req.Template.Method,
-		Config:    req.Template.Config,
-		CreatedAt: time.Now().UTC(),
-	}
-
-	return h.cfg.BatchStore.CreateBatch(context.TODO(), &rec)
 }
 
 func (h *HeadNode) saveChunkInfo(id string, assignments map[peer.ID]*request.WorkOrderBatch) error {
@@ -134,7 +111,7 @@ func (h *HeadNode) markStartedChunks(id string, assignments map[peer.ID]*request
 
 		ids := make([]string, len(chunk.Arguments))
 		for i, args := range chunk.Arguments {
-			ids[i] = string(execute.ExecutionID(chunk.Template.FunctionID, chunk.Template.Method, args))
+			ids[i] = workItemID(id, string(execute.ExecutionID(chunk.Template.FunctionID, chunk.Template.Method, args)))
 		}
 
 		err := h.cfg.BatchStore.UpdateWorkItemStatus(context.TODO(), batchstore.StatusInProgress, ids...)

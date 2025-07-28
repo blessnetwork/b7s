@@ -585,7 +585,7 @@ components:
           description: If the Batch Execution Request failed, this message might have more info about the error
           type: string
           x-go-type-skip-optional-pointer: true
-        chunk:
+        chunks:
           description: Results of the execution of the Batch Request, executed by different nodes
           x-go-type-skip-optional-pointer: true
           additionalProperties:

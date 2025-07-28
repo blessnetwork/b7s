@@ -53,13 +53,21 @@ func (s *BatchStore) UpdateWorkItem(ctx context.Context, rec *batchstore.WorkIte
 
 func (s *BatchStore) UpdateWorkItemStatus(ctx context.Context, status int32, ids ...string) error {
 
+	query := bson.M{"$set": bson.M{
+		"status":     status,
+		"updated_at": time.Now().UTC(),
+	}}
+
+	if status == batchstore.StatusFailed {
+		query["$inc"] = bson.M{
+			"attempts": 1,
+		}
+	}
+
 	_, err := s.items.UpdateMany(
 		ctx,
 		bson.M{"id": bson.M{"$in": ids}},
-		bson.M{"$set": bson.M{
-			"status":     status,
-			"updated_at": time.Now().UTC(),
-		}},
+		query,
 	)
 	if err != nil {
 		return fmt.Errorf("could not update work item: %w", err)
@@ -69,7 +77,7 @@ func (s *BatchStore) UpdateWorkItemStatus(ctx context.Context, status int32, ids
 }
 
 // Pointer to int32 is not to pretty but not using zero as a nice default status seems like a waste.
-func (s *BatchStore) FindWorkItems(ctx context.Context, batchID string, chunkID string, status *int32) ([]*batchstore.WorkItemRecord, error) {
+func (s *BatchStore) FindWorkItems(ctx context.Context, batchID string, chunkID string, statuses ...int32) ([]*batchstore.WorkItemRecord, error) {
 
 	query := make(map[string]any)
 
@@ -81,8 +89,15 @@ func (s *BatchStore) FindWorkItems(ctx context.Context, batchID string, chunkID 
 		query["chunk_id"] = chunkID
 	}
 
-	if status != nil {
-		query["status"] = *status
+	sn := len(statuses)
+	if sn == 1 {
+		// Exact match for status
+		query["status"] = statuses[0]
+	} else if sn > 1 {
+		// We have a list of statuses.
+		query["status"] = map[string]any{
+			"$in": statuses,
+		}
 	}
 
 	cursor, err := s.items.Find(ctx, query)
