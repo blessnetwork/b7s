@@ -72,7 +72,7 @@ func TestBatchStore_Batch(t *testing.T) {
 
 		status := rand.Int32N(11)
 
-		err = store.UpdateBatchStatus(ctx, batch.ID, status)
+		err = store.UpdateBatchStatus(ctx, status, batch.ID)
 		require.NoError(t, err)
 
 		retrieved, err := store.GetBatch(ctx, batch.ID)

@@ -36,6 +36,12 @@ func (h *HeadNode) ExecuteFunctionBatch(ctx context.Context, req request.Execute
 
 	log.Info().Msg("processing batch execution request via API")
 
+	// Persist batch and work items.
+	err := h.saveBatch(requestID, req)
+	if err != nil {
+		return nil, fmt.Errorf("could not save batch request: %w", err)
+	}
+
 	results, err := h.executeBatch(ctx, requestID, req)
 	if err != nil {
 		return nil, fmt.Errorf("could not execute batch request: %w", err)

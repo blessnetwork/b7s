@@ -12,6 +12,7 @@ const (
 	DefaultClusterFormationTimeout  = 10 * time.Second
 	DefaultConsensusAlgorithm       = consensus.Raft
 	DefaultBatchWorkItemMaxAttempts = 10
+	DefaultBatchRequeueInterval     = time.Hour
 
 	rollCallQueueBufferSize  = 1000
 	executionResultCacheSize = 1000

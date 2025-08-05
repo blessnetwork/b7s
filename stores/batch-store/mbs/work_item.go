@@ -76,7 +76,6 @@ func (s *BatchStore) UpdateWorkItemStatus(ctx context.Context, status int32, ids
 	return nil
 }
 
-// Pointer to int32 is not to pretty but not using zero as a nice default status seems like a waste.
 func (s *BatchStore) FindWorkItems(ctx context.Context, batchID string, chunkID string, statuses ...int32) ([]*batchstore.WorkItemRecord, error) {
 
 	query := make(map[string]any)

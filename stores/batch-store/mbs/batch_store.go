@@ -40,8 +40,6 @@ func NewBatchStore(cli *mongo.Client, opts ...OptionFunc) (*BatchStore, error) {
 
 func (s *BatchStore) Init(ctx context.Context) error {
 
-	// TODO: Move this stuff below to a separate method.
-
 	if s.cfg.initCollections {
 		err := s.createCollections(ctx)
 		if err != nil {
@@ -76,8 +74,7 @@ func (s *BatchStore) createCollections(ctx context.Context) error {
 
 		options := options.CreateCollection().SetValidator(compiled)
 
-		// TODO: Use a specific database
-		err = s.cli.Database("playground").CreateCollection(ctx, collection, options)
+		err = s.cli.Database(s.cfg.dbname).CreateCollection(ctx, collection, options)
 
 		// TODO: Honour config option.
 

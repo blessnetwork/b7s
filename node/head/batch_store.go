@@ -3,7 +3,6 @@ package head
 import (
 	"context"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -25,9 +24,9 @@ func workItemID(batchID string, itemID string) string {
 	return batchID + "/" + itemID
 }
 
-func (h *HeadNode) saveBatch(id string, req request.ExecuteBatch) error {
+func (h *HeadNode) saveBatch(batchID string, req request.ExecuteBatch) error {
 
-	batch, items := requestToBatchRecord(id, req)
+	batch, items := requestToBatchRecord(batchID, req)
 
 	batch.Status = batchstore.StatusInProgress
 
@@ -44,16 +43,15 @@ func (h *HeadNode) saveBatch(id string, req request.ExecuteBatch) error {
 	return nil
 }
 
-func (h *HeadNode) saveChunkInfo(id string, assignments map[peer.ID]*request.WorkOrderBatch) error {
+func (h *HeadNode) saveChunkInfo(batchID string, assignments map[peer.ID]*request.WorkOrderBatch) error {
 
-	// Create chunk records.
-	err := h.createChunks(id, assignments)
+	err := h.createChunks(batchID, assignments)
 	if err != nil {
 		return fmt.Errorf("could not save chunks: %w", err)
 	}
 
 	// Update work items to set their assignments (associate chunk ID).
-	err = h.updateWorkOrderAssignments(id, assignments)
+	err = h.updateWorkOrderAssignments(batchID, assignments)
 	if err != nil {
 		return fmt.Errorf("could not update work items to assign chunk ID: %w", err)
 	}
@@ -61,7 +59,7 @@ func (h *HeadNode) saveChunkInfo(id string, assignments map[peer.ID]*request.Wor
 	return nil
 }
 
-func (h *HeadNode) createChunks(id string, assignments map[peer.ID]*request.WorkOrderBatch) error {
+func (h *HeadNode) createChunks(batchID string, assignments map[peer.ID]*request.WorkOrderBatch) error {
 
 	ts := time.Now().UTC()
 	chunks := make([]*batchstore.ChunkRecord, len(assignments))
@@ -70,7 +68,7 @@ func (h *HeadNode) createChunks(id string, assignments map[peer.ID]*request.Work
 	for _, chunk := range assignments {
 		chunks[i] = &batchstore.ChunkRecord{
 			ID:        chunk.ChunkID,
-			RequestID: id,
+			BatchID:   batchID,
 			Status:    0,
 			CreatedAt: ts,
 		}
@@ -81,7 +79,7 @@ func (h *HeadNode) createChunks(id string, assignments map[peer.ID]*request.Work
 	return h.cfg.BatchStore.CreateChunks(context.TODO(), chunks...)
 }
 
-func (h *HeadNode) updateWorkOrderAssignments(id string, assignments map[peer.ID]*request.WorkOrderBatch) error {
+func (h *HeadNode) updateWorkOrderAssignments(batchID string, assignments map[peer.ID]*request.WorkOrderBatch) error {
 
 	for peer, chunk := range assignments {
 
@@ -100,18 +98,44 @@ func (h *HeadNode) updateWorkOrderAssignments(id string, assignments map[peer.ID
 	return nil
 }
 
-func (h *HeadNode) markStartedChunks(id string, assignments map[peer.ID]*request.WorkOrderBatch, ignore []peer.ID) error {
+func (h *HeadNode) markStartedChunks(batchID string, assignments map[peer.ID]*request.WorkOrderBatch, ignore []peer.ID) error {
+
+	// Faster lookup of chunks to not update.
+	im := make(map[peer.ID]struct{})
+	for _, peer := range ignore {
+		im[peer] = struct{}{}
+	}
+
+	// Get list of started chunks so we can update them.
+	started := make([]string, 0, len(assignments))
+	for peer, chunk := range assignments {
+		_, ok := im[peer]
+		if ok {
+			continue
+		}
+
+		started = append(started, chunk.ChunkID)
+	}
 
 	var multierr *multierror.Error
+
+	// Update chunks all at once.
+	err := h.cfg.BatchStore.UpdateChunkStatus(context.TODO(), batchstore.StatusInProgress, started...)
+	if err != nil {
+		multierr = multierror.Append(multierr, err)
+	}
+
+	// Update work items in larger batches.
 	for peer, chunk := range assignments {
-		// Skip chunks to which deliveries failed.
-		if slices.Contains(ignore, peer) {
+
+		_, ok := im[peer]
+		if !ok {
 			continue
 		}
 
 		ids := make([]string, len(chunk.Arguments))
 		for i, args := range chunk.Arguments {
-			ids[i] = workItemID(id, string(execute.ExecutionID(chunk.Template.FunctionID, chunk.Template.Method, args)))
+			ids[i] = workItemID(batchID, string(execute.ExecutionID(chunk.Template.FunctionID, chunk.Template.Method, args)))
 		}
 
 		err := h.cfg.BatchStore.UpdateWorkItemStatus(context.TODO(), batchstore.StatusInProgress, ids...)
@@ -123,9 +147,12 @@ func (h *HeadNode) markStartedChunks(id string, assignments map[peer.ID]*request
 	return multierr.ErrorOrNil()
 }
 
-func (h *HeadNode) markCompletedChunks(id string, chunkResults map[string]response.NodeChunkResults) error {
+func (h *HeadNode) markCompletedChunks(batchID string, sizes map[string]int, chunkResults map[string]response.NodeChunkResults) error {
+
+	// TODO: Mark chunk as complete if we have responses for all work items in that chunk.
 
 	// Group resulting work items by status so we can update them in batches.
+	completed := make([]string, 0, len(chunkResults))
 	statuses := make(map[batchstore.Status][]string)
 	for chunkID, res := range chunkResults {
 
@@ -134,7 +161,7 @@ func (h *HeadNode) markCompletedChunks(id string, chunkResults map[string]respon
 			status := exitCodeToBatchStoreStatus(itemResult.Result.Result.ExitCode)
 
 			h.Log().Debug().
-				Str("batch", id).
+				Str("batch", batchID).
 				Str("chunk", chunkID).
 				Str("item_id", string(itemID)).
 				Int32("status", int32(status)).
@@ -146,17 +173,22 @@ func (h *HeadNode) markCompletedChunks(id string, chunkResults map[string]respon
 				statuses[status] = make([]string, 0, 10)
 			}
 
-			statuses[status] = append(statuses[status], string(itemID))
+			statuses[status] = append(statuses[status], workItemID(batchID, string(itemID)))
+		}
+
+		// If we have all of the results - mark the chunk as done.
+		if len(res.Results) == sizes[chunkID] {
+			completed = append(completed, chunkID)
 		}
 	}
 
-	var err *multierror.Error
+	var merr *multierror.Error
 
 	for status, ids := range statuses {
 
 		log := h.Log().
 			With().
-			Str("batch", id).
+			Str("batch", batchID).
 			Int32("status", int32(status)).
 			Strs("items", ids).
 			Logger()
@@ -168,11 +200,21 @@ func (h *HeadNode) markCompletedChunks(id string, chunkResults map[string]respon
 			// Logging AND returning the message here but extra context is useful
 			log.Error().Err(err).Msg("could not update work item status")
 
-			err = multierror.Append(err, fmt.Errorf("could not update work item status: %w", err))
+			merr = multierror.Append(merr, fmt.Errorf("could not update work item status: %w", err))
 		}
 	}
 
-	return err.ErrorOrNil()
+	err := h.cfg.BatchStore.UpdateChunkStatus(context.TODO(), batchstore.StatusDone, completed...)
+	if err != nil {
+		h.Log().Error().
+			Err(err).
+			Strs("ids", completed).
+			Msg("could not update chunk statutes")
+
+		err = multierror.Append(merr, fmt.Errorf("could not update chunk status: %w", err))
+	}
+
+	return merr.ErrorOrNil()
 }
 
 func exitCodeToBatchStoreStatus(e int) batchstore.Status {

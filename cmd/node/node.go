@@ -69,14 +69,20 @@ func createHeadNode(ctx context.Context, core node.Core, cfg *config.Config) (No
 
 	var opts []head.Option
 
-	batchServer := cfg.Head.BatchDBServer
+	batchServer := cfg.Head.Batch.Server
 	if batchServer != "" {
+
+		log.Info().
+			Str("server", batchServer).
+			Str("db_name", cfg.Head.Batch.DBName).
+			Msg("initializing mongo batch server")
+
 		cli, err := b7smongo.Connect(ctx, batchServer)
 		if err != nil {
 			return nil, fmt.Errorf("could not connect to batch server: %w", err)
 		}
 
-		bs, err := mbs.NewBatchStore(cli, mbs.DBName(cfg.Head.BatchDBName))
+		bs, err := mbs.NewBatchStore(cli, mbs.DBName(cfg.Head.Batch.DBName))
 		if err != nil {
 			return nil, fmt.Errorf("could not create batch store: %w", err)
 		}
@@ -86,7 +92,13 @@ func createHeadNode(ctx context.Context, core node.Core, cfg *config.Config) (No
 			return nil, fmt.Errorf("could not initialize batch store: %w", err)
 		}
 
+		log.Info().Msg("initialized mongo batch server")
+
 		opts = append(opts, head.BatchStore(bs))
+
+		if cfg.Head.Batch.RequeueInterval > 0 {
+			opts = append(opts, head.BatchRequeueInterval(cfg.Head.Batch.RequeueInterval))
+		}
 	}
 
 	head, err := head.New(core, opts...)

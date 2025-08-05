@@ -56,7 +56,7 @@ func TestBatchStore_WorkItem(t *testing.T) {
 
 		orig := items[0]
 		copy := *orig
-		copy.RequestID = copy.RequestID + fmt.Sprint(rand.Int32N(10))
+		copy.BatchID = copy.BatchID + fmt.Sprint(rand.Int32N(10))
 
 		err = store.UpdateWorkItem(ctx, &copy)
 		require.NoError(t, err)
@@ -64,7 +64,8 @@ func TestBatchStore_WorkItem(t *testing.T) {
 		retrieved, err := store.GetWorkItem(ctx, copy.ID)
 		require.NoError(t, err)
 
-		require.Equal(t, copy, *retrieved)
+		require.Equal(t, copy.BatchID, retrieved.BatchID)
+		require.True(t, retrieved.UpdatedAt.After(orig.UpdatedAt))
 	})
 	t.Run("update status", func(t *testing.T) {
 
@@ -116,10 +117,10 @@ func newWorkItems(t *testing.T, n int) []*batchstore.WorkItemRecord {
 	items := make([]*batchstore.WorkItemRecord, n)
 	for i := range n {
 		items[i] = &batchstore.WorkItemRecord{
-			ID:        fmt.Sprintf("test.work-item-%v", rand.Int()),
-			ChunkID:   fmt.Sprintf("test.chunk-%v", rand.Int()),
-			RequestID: fmt.Sprintf("test-request-id-%v", rand.Int()),
-			Status:    0,
+			ID:      fmt.Sprintf("test.work-item-%v", rand.Int()),
+			ChunkID: fmt.Sprintf("test.chunk-%v", rand.Int()),
+			BatchID: fmt.Sprintf("test-request-id-%v", rand.Int()),
+			Status:  0,
 		}
 	}
 

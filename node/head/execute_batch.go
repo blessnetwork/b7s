@@ -34,7 +34,7 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 		Str("function", req.Template.FunctionID).
 		Int("size", len(req.Arguments)).Logger()
 
-	log.Info().Msg("received a batch request")
+	log.Info().Msg("received batch execution request")
 
 	// Persist batch and work items.
 	err := h.saveBatch(requestID, req)
@@ -117,24 +117,21 @@ func (h *HeadNode) executeBatch(
 	if err != nil {
 
 		var sendErr *batchSendError
-		if errors.As(err, &sendErr) {
-			// TODO: Handle partial failures by retrying part of the batch that failed.
-			log.Warn().
-				Strs("peers", bls.PeerIDsToStr(sendErr.Targets())).
-				Msg("partial failure to send batch requst")
-
-			failedDeliveries = sendErr.Targets()
+		if !errors.As(err, &sendErr) {
+			return nil, fmt.Errorf("could not send work order batch: %w", err)
 		}
 
-		return nil, fmt.Errorf("could not send work order batch: %w", err)
+		log.Warn().
+			Strs("peers", bls.PeerIDsToStr(sendErr.Targets())).
+			Msg("partial failure to send batch requst")
+
+		failedDeliveries = sendErr.Targets()
 	}
 
 	err = h.markStartedChunks(requestID, assignments, failedDeliveries)
 	if err != nil {
 		return nil, fmt.Errorf("could not mark chunks as in-progress: %w", err)
 	}
-
-	// TODO: Handle errors - reintroduce to the pool.
 
 	// Wait for results.
 
@@ -174,7 +171,13 @@ func (h *HeadNode) executeBatch(
 		chunkResults[assignment.ChunkID] = sr
 	}
 
-	err = h.markCompletedChunks(requestID, chunkResults)
+	// Get the expected number of results so we can mark a chunk as complete if we have all of its results.
+	chunkSizes := make(map[string]int)
+	for _, chunk := range assignments {
+		chunkSizes[chunk.ChunkID] = len(chunk.Arguments)
+	}
+
+	err = h.markCompletedChunks(requestID, chunkSizes, chunkResults)
 	if err != nil {
 		return nil, fmt.Errorf("could not mark chunks as complete: %w", err)
 	}
@@ -212,20 +215,16 @@ func logAssignments(log *zerolog.Logger, assignments map[peer.ID]*request.WorkOr
 }
 
 // Collect any work items for the batch that have not been executed yet and start their execution again.
-func (h *HeadNode) continueBatchExecution(ctx context.Context, requestID string) error {
+func (h *HeadNode) continueBatchExecution(ctx context.Context, batch *batchstore.ExecuteBatchRecord) error {
+
+	requestID := batch.ID
 
 	log := h.Log().With().
-		Str("request", requestID).
+		Str("batch", batch.ID).
 		Logger()
 
 	log.Info().Msg("continuing batch execution")
 
-	batch, err := h.cfg.BatchStore.GetBatch(ctx, requestID)
-	if err != nil {
-		return fmt.Errorf("could not retrieve batch: %w", err)
-	}
-
-	// NOTE: Perhaps we should not trust this flag.
 	if batch.Status == batchstore.StatusDone {
 		log.Info().Msg("batch reported as completed, stopping")
 		return nil
@@ -237,23 +236,46 @@ func (h *HeadNode) continueBatchExecution(ctx context.Context, requestID string)
 		return fmt.Errorf("could not retrieve work items for batch (batch:%v): %w", requestID, err)
 	}
 
-	threshold := min(h.cfg.BatchWorkItemMaxAttempts, batch.MaxAttempts)
+	threshold := min(h.cfg.WorkItemMaxAttempts, batch.MaxAttempts)
 	pending, permaFailed := filterWorkItems(items, threshold)
 
-	go func(ctx context.Context) {
-		formatWorkRecordIDs := func(items []*batchstore.WorkItemRecord) []string {
-			ids := make([]string, 0, len(items))
-			for i, item := range items {
-				ids[i] = workItemID(requestID, string(execute.ExecutionID(batch.CID, batch.Method, item.Arguments)))
+	if len(permaFailed) > 0 {
+		go func(ctx context.Context) {
+
+			h.Log().Info().
+				Str("batch", requestID).
+				Int("count", len(permaFailed)).
+				Msg("marking work items as permanently failed")
+
+			formatWorkRecordIDs := func(items []*batchstore.WorkItemRecord) []string {
+				ids := make([]string, 0, len(items))
+				for i, item := range items {
+					ids[i] = workItemID(requestID, string(execute.ExecutionID(batch.CID, batch.Method, item.Arguments)))
+				}
+
+				return ids
 			}
 
-			return ids
-		}
-		err = h.cfg.BatchStore.UpdateWorkItemStatus(ctx, batchstore.StatusPermanentlyFailed, formatWorkRecordIDs(permaFailed)...)
-		if err != nil {
-			log.Error().Err(err).Msg("could not mark items as permanently failed")
-		}
-	}(ctx)
+			err = h.cfg.BatchStore.UpdateWorkItemStatus(ctx, batchstore.StatusPermanentlyFailed, formatWorkRecordIDs(permaFailed)...)
+			if err != nil {
+				log.Error().Err(err).Msg("could not mark items as permanently failed")
+			}
+		}(ctx)
+	}
+
+	if len(pending) == 0 {
+
+		h.Log().Info().
+			Str("batch", requestID).
+			Msg("no pending work items - marking batch as done")
+
+		return h.cfg.BatchStore.UpdateBatchStatus(ctx, batchstore.StatusDone, requestID)
+	}
+
+	h.Log().Info().
+		Str("batch", requestID).
+		Int("pending", len(pending)).
+		Msg("requeuing batch work items")
 
 	// TODO: Do we need the return value?
 	_, err = h.executeBatch(ctx, requestID, batchRecordToRequest(batch, pending))

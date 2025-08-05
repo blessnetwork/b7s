@@ -3,6 +3,7 @@ package head
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-metrics"
@@ -12,6 +13,7 @@ import (
 	"github.com/blessnetwork/b7s/models/response"
 	"github.com/blessnetwork/b7s/node"
 	"github.com/blessnetwork/b7s/node/internal/waitmap"
+	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
 type HeadNode struct {
@@ -59,7 +61,54 @@ func New(core node.Core, options ...Option) (*HeadNode, error) {
 }
 
 func (h *HeadNode) Run(ctx context.Context) error {
+
+	// TODO: Add a synchronous first loop or something like that so we can fail early.
+	// TODO: Re-read this.
+	go func(ctx context.Context) {
+
+		ticker := time.NewTicker(h.cfg.RequeueInterval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+
+				err := h.resumeUnfinishedBatches(ctx)
+				if err != nil {
+					h.Log().Error().
+						Err(err).
+						Msg("could not resume incomplete batches")
+				}
+
+			case <-ctx.Done():
+				h.Log().Info().Msg("stopping batch resume loop")
+			}
+		}
+	}(ctx)
+
 	return h.Core.Run(ctx, h.process)
+}
+
+func (h *HeadNode) resumeUnfinishedBatches(ctx context.Context) error {
+
+	batches, err := h.cfg.BatchStore.FindBatches(ctx, batchstore.StatusInProgress, batchstore.StatusCreated)
+	if err != nil {
+		return fmt.Errorf("could not lookup incomplete batches: %w", err)
+	}
+
+	// TODO: Decide - process batches sequentially? In parallel?
+	for _, batch := range batches {
+
+		err = h.continueBatchExecution(ctx, batch)
+		if err != nil {
+			h.Log().Error().
+				Err(err).
+				Str("batch", batch.ID).
+				Msg("countinued batch execution failed")
+		}
+	}
+
+	return nil
 }
 
 func newRequestID() string {

@@ -53,7 +53,7 @@ func requestToBatchRecord(id string, req request.ExecuteBatch) (*batchstore.Exec
 
 		items[i] = &batchstore.WorkItemRecord{
 			ID:        workItemID(id, string(itemID)),
-			RequestID: id,
+			BatchID:   id,
 			Arguments: args,
 			Status:    batchstore.StatusCreated,
 			Attempts:  0,

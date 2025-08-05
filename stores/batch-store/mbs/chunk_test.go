@@ -59,7 +59,7 @@ func TestBatchStore_Chunks(t *testing.T) {
 		orig := chunks[0]
 
 		copy := *orig
-		copy.RequestID = copy.RequestID + fmt.Sprint(rand.Int32N(10))
+		copy.BatchID = copy.BatchID + fmt.Sprint(rand.Int32N(10))
 
 		err = store.UpdateChunk(ctx, &copy)
 		require.NoError(t, err)
@@ -117,9 +117,9 @@ func newChunks(t *testing.T, n int) []*batchstore.ChunkRecord {
 	chunks := make([]*batchstore.ChunkRecord, n)
 	for i := range n {
 		chunks[i] = &batchstore.ChunkRecord{
-			ID:        fmt.Sprintf("test.chunk-%v", rand.Int()),
-			RequestID: fmt.Sprintf("test-request-id-%v", rand.Int()),
-			Status:    0,
+			ID:      fmt.Sprintf("test.chunk-%v", rand.Int()),
+			BatchID: fmt.Sprintf("test-request-id-%v", rand.Int()),
+			Status:  0,
 		}
 	}
 
