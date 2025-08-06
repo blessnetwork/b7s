@@ -16,6 +16,7 @@ const (
 
 	rollCallQueueBufferSize  = 1000
 	executionResultCacheSize = 1000
+	batchResumeDelay         = 1 * time.Minute
 
 	defaultExecutionThreshold = 0.6
 

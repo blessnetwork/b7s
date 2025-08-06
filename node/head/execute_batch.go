@@ -42,6 +42,13 @@ func (h *HeadNode) processExecuteBatch(ctx context.Context, from peer.ID, req re
 		return fmt.Errorf("could not save batch request: %w", err)
 	}
 
+	// TODO: Reset "in progress work items": Head node could send a chunk to a worker,
+	// and the worker might crash or something. The head node will then consider that chunk as "in progress"
+	// as it was delivered to the worker, while the worker will (after restart) lose any info about the chunk
+	// it was sent. When looking into resuming a batch - we must consider these work items -
+	// - at certain point they should be reset and no longer be considered "in progress".
+
+	// TODO: When a work order batch response is received out of band, status should be updated too.
 	results, err := h.executeBatch(ctx, requestID, req)
 	if err != nil {
 		return fmt.Errorf("could not execute batch request: %w", err)

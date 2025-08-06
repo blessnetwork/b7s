@@ -21,8 +21,7 @@ func batchRecordToRequest(batch *batchstore.ExecuteBatchRecord, items []*batchst
 		Template: request.ExecutionRequestTemplate{
 			FunctionID: batch.CID,
 			Method:     batch.Method,
-			// TODO: Add config support
-			// Config: execute.Config(batch.Config),
+			Config:     execute.Config(batch.Config),
 		},
 		Arguments:   args,
 		MaxAttempts: batch.MaxAttempts,

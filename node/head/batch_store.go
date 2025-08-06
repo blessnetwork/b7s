@@ -69,7 +69,7 @@ func (h *HeadNode) createChunks(batchID string, assignments map[peer.ID]*request
 		chunks[i] = &batchstore.ChunkRecord{
 			ID:        chunk.ChunkID,
 			BatchID:   batchID,
-			Status:    0,
+			Status:    batchstore.StatusCreated,
 			CreatedAt: ts,
 		}
 
@@ -109,8 +109,8 @@ func (h *HeadNode) markStartedChunks(batchID string, assignments map[peer.ID]*re
 	// Get list of started chunks so we can update them.
 	started := make([]string, 0, len(assignments))
 	for peer, chunk := range assignments {
-		_, ok := im[peer]
-		if ok {
+		_, undelivered := im[peer]
+		if undelivered {
 			continue
 		}
 
@@ -128,8 +128,8 @@ func (h *HeadNode) markStartedChunks(batchID string, assignments map[peer.ID]*re
 	// Update work items in larger batches.
 	for peer, chunk := range assignments {
 
-		_, ok := im[peer]
-		if !ok {
+		_, undelivered := im[peer]
+		if undelivered {
 			continue
 		}
 

@@ -95,7 +95,9 @@ rollCallResponseLoop:
 
 			// -1 means we'll take any peers reporting
 			if len(reportingPeers) >= nodeCount && nodeCount != -1 {
-				log.Info().Msg("enough peers reported for roll call")
+				log.Info().
+					Int("count", len(reportingPeers)).
+					Msg("enough peers reported for roll call")
 				break rollCallResponseLoop
 			}
 		}

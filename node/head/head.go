@@ -66,6 +66,19 @@ func (h *HeadNode) Run(ctx context.Context) error {
 	// TODO: Re-read this.
 	go func(ctx context.Context) {
 
+		// NOTE: Not a perfect solution, but the simplest one:
+		// Wait a little while until some of the peers connect.
+		// Else we can wait until we get some threshold N of connected peers.
+		// TODO: Double check this decision.
+		time.Sleep(batchResumeDelay)
+
+		// Run first sync immediately.
+		err := h.resumeUnfinishedBatches(ctx)
+		if err != nil {
+			h.Log().Error().
+				Err(err).Msg("could not resume incomplete batches")
+		}
+
 		ticker := time.NewTicker(h.cfg.RequeueInterval)
 		defer ticker.Stop()
 
@@ -95,6 +108,10 @@ func (h *HeadNode) resumeUnfinishedBatches(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not lookup incomplete batches: %w", err)
 	}
+
+	h.Log().Info().
+		Int("count", len(batches)).
+		Msg("found unfinished batches")
 
 	// TODO: Decide - process batches sequentially? In parallel?
 	for _, batch := range batches {

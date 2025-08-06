@@ -13,8 +13,9 @@ type BatchStore struct {
 	CreateBatchFunc       func(context.Context, *batchstore.ExecuteBatchRecord) error
 	GetBatchFunc          func(context.Context, string) (*batchstore.ExecuteBatchRecord, error)
 	UpdateBatchFunc       func(context.Context, *batchstore.ExecuteBatchRecord) error
-	UpdateBatchStatusFunc func(context.Context, string, int32) error
+	UpdateBatchStatusFunc func(context.Context, int32, string) error
 	DeleteBatchFunc       func(context.Context, string) error
+	FindBatchesFunc       func(context.Context, ...int32) ([]*batchstore.ExecuteBatchRecord, error)
 
 	CreateChunksFunc      func(context.Context, ...*batchstore.ChunkRecord) error
 	GetChunkFunc          func(context.Context, string) (*batchstore.ChunkRecord, error)
@@ -47,11 +48,14 @@ func BaselineMockStore(t *testing.T) *BatchStore {
 		UpdateBatchFunc: func(context.Context, *batchstore.ExecuteBatchRecord) error {
 			return nil
 		},
-		UpdateBatchStatusFunc: func(context.Context, string, int32) error {
+		UpdateBatchStatusFunc: func(context.Context, int32, string) error {
 			return nil
 		},
 		DeleteBatchFunc: func(context.Context, string) error {
 			return nil
+		},
+		FindBatchesFunc: func(context.Context, ...int32) ([]*batchstore.ExecuteBatchRecord, error) {
+			return nil, nil
 		},
 
 		CreateChunksFunc: func(context.Context, ...*batchstore.ChunkRecord) error {
@@ -109,12 +113,16 @@ func (m *BatchStore) UpdateBatch(ctx context.Context, rec *batchstore.ExecuteBat
 	return m.UpdateBatchFunc(ctx, rec)
 }
 
-func (m *BatchStore) UpdateBatchStatus(ctx context.Context, id string, status int32) error {
-	return m.UpdateBatchStatusFunc(ctx, id, status)
+func (m *BatchStore) UpdateBatchStatus(ctx context.Context, status int32, id string) error {
+	return m.UpdateBatchStatusFunc(ctx, status, id)
 }
 
 func (m *BatchStore) DeleteBatch(ctx context.Context, id string) error {
 	return m.DeleteBatchFunc(ctx, id)
+}
+
+func (m *BatchStore) FindBatches(ctx context.Context, statuses ...int32) ([]*batchstore.ExecuteBatchRecord, error) {
+	return m.FindBatchesFunc(ctx, statuses...)
 }
 
 func (m *BatchStore) CreateChunks(ctx context.Context, rec ...*batchstore.ChunkRecord) error {
