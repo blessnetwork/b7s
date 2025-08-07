@@ -9,6 +9,8 @@ import (
 
 	"github.com/blessnetwork/b7s/consensus/pbft"
 	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/node/internal/waitmap"
 )
 
 // gatherExecutionResultsPBFT collects execution results from a PBFT cluster. This means f+1 identical results.
@@ -108,6 +110,7 @@ func (h *HeadNode) gatherExecutionResultsPBFT(ctx context.Context, requestID str
 }
 
 // gatherExecutionResults collects execution results from direct executions or raft clusters.
+// TODO: Make this generic and reuse.
 func (h *HeadNode) gatherExecutionResults(ctx context.Context, requestID string, peers []peer.ID) execute.ResultMap {
 
 	// We're willing to wait for a limited amount of time.
@@ -130,6 +133,85 @@ func (h *HeadNode) gatherExecutionResults(ctx context.Context, requestID string,
 			defer wg.Done()
 			key := peerRequestKey(requestID, peer)
 			res, ok := h.workOrderResponses.WaitFor(exctx, key)
+			if !ok {
+				return
+			}
+
+			h.Log().Info().Str("peer", peer.String()).Msg("accounted execution response from peer")
+
+			reslock.Lock()
+			defer reslock.Unlock()
+			results[peer] = res
+		}(rp)
+	}
+
+	wg.Wait()
+
+	return results
+}
+
+func gatherPeerMessages[T any](
+	ctx context.Context,
+	peers []peer.ID,
+	peerMessageID func(peer.ID) string,
+	wm *waitmap.WaitMap[string, T],
+) map[peer.ID]T {
+
+	// TODO: Provide a limited context now.
+
+	var (
+		results = make(map[peer.ID]T)
+		reslock sync.Mutex
+		wg      sync.WaitGroup
+	)
+
+	wg.Add(len(peers))
+
+	for _, p := range peers {
+
+		go func(peer peer.ID) {
+			defer wg.Done()
+
+			key := peerMessageID(peer)
+			res, ok := wm.WaitFor(ctx, key)
+			if !ok {
+				return
+			}
+
+			reslock.Lock()
+			defer reslock.Unlock()
+
+			results[peer] = res
+		}(p)
+	}
+
+	wg.Wait()
+
+	return results
+}
+
+func (h *HeadNode) gatherBatchResults(ctx context.Context, requestID string, strandID string, peers []peer.ID) map[peer.ID]response.WorkOrderBatch {
+
+	// We're willing to wait for a limited amount of time.
+	exctx, exCancel := context.WithTimeout(ctx, h.cfg.ExecutionTimeout)
+	defer exCancel()
+
+	var (
+		results = make(map[peer.ID]response.WorkOrderBatch)
+		reslock sync.Mutex
+		wg      sync.WaitGroup
+	)
+
+	wg.Add(len(peers))
+
+	// Wait on peers asynchronously.
+	for _, rp := range peers {
+		rp := rp
+
+		go func(peer peer.ID) {
+			defer wg.Done()
+			key := peerStrandKey(requestID, strandID, peer)
+			res, ok := h.workOrderBatchResponses.WaitFor(exctx, key)
 			if !ok {
 				return
 			}

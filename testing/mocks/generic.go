@@ -49,11 +49,9 @@ var (
 	GenericExecutionRequest = execute.Request{
 		FunctionID: "generic-function-id",
 		Method:     "wasm",
-		Parameters: []execute.Parameter{
-			{
-				Name:  "generic-param-name",
-				Value: "generic-param-value",
-			},
+		Arguments: []string{
+			"generic-argument-1",
+			"generic-argument-2",
 		},
 	}
 

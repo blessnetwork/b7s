@@ -1,9 +1,11 @@
 package head
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/armon/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -103,7 +105,16 @@ func (h *HeadNode) execute(ctx context.Context, requestID string, req request.Ex
 	log.Info().Msg("processing execution request")
 
 	// Phase 1. - Issue roll call to nodes.
-	reportingPeers, err := h.executeRollCall(ctx, requestID, req, consensus)
+
+	// Limit for how long we wait for responses.
+	t := cmp.Or(
+		time.Duration(req.Config.Timeout)*time.Second,
+		h.cfg.RollCallTimeout,
+	)
+	tctx, cancel := context.WithTimeout(ctx, t)
+	defer cancel()
+
+	reportingPeers, err := h.executeRollCall(tctx, req.RollCall(requestID, consensus), req.Topic, req.Config.NodeCount)
 	if err != nil {
 		code := codes.Error
 		if errors.Is(err, bls.ErrRollCallTimeout) {
@@ -205,6 +216,24 @@ func (h *HeadNode) processWorkOrderResponse(ctx context.Context, from peer.ID, r
 	h.workOrderResponses.Set(key, res.Result)
 
 	return nil
+}
+
+func (h *HeadNode) processWorkOrderBatchResponse(ctx context.Context, from peer.ID, res response.WorkOrderBatch) error {
+
+	h.Log().Debug().
+		Stringer("from", from).
+		Str("request", res.RequestID).
+		Str("strand", res.StrandID).
+		Msg("received work order batch response")
+
+	key := peerStrandKey(res.RequestID, res.StrandID, from)
+	h.workOrderBatchResponses.Set(key, res)
+
+	return nil
+}
+
+func peerStrandKey(requestID string, _ string, peer peer.ID) string {
+	return requestID + "/" + peer.String()
 }
 
 func determineThreshold(req execute.Request) float64 {
