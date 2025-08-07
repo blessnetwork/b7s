@@ -43,8 +43,7 @@ type Config struct {
 	Workspace      string   `koanf:"workspace"       flag:"workspace"`       // TODO: Check - does a head node ever use a workspace?
 	LoadAttributes bool     `koanf:"load-attributes" flag:"load-attributes"` // TODO: Head node probably doesn't need attributes..?
 	Topics         []string `koanf:"topics"          flag:"topics"`
-
-	DB string `koanf:"db" flag:"db"`
+	DB             string   `koanf:"db"              flag:"db"`
 
 	Log          Log          `koanf:"log"`
 	Connectivity Connectivity `koanf:"connectivity"`

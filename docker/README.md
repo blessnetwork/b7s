@@ -9,7 +9,7 @@
 First, you'll need to pull the latest version of the b7s Docker image from the public registry:
 
 ```bash
-docker pull ghcr.io/blocklessnetwork/b7s:v0.0.25
+docker pull ghcr.io/blocklessnetwork/b7s:v0.6.6.patch2
 ```
 
 Run the image
@@ -29,7 +29,7 @@ docker run -d --name b7s \
   -e DIALBACK_ADDRESS=1.1.1.1 \
   -v /var/tmp/b7s/db:/var/tmp/b7s/db \
   -p 9527:9527 \
-  ghcr.io/blocklessnetwork/b7s:v0.0.25
+  ghcr.io/blocklessnetwork/b7s:v0.6.6.patch2
 ```
 To Run the Node in the Worker Node Configuration
 
@@ -41,7 +41,20 @@ docker run -d --name b7s \
   -e KEY_PASSWORD=<YOUR_S3_KEY_PASSWORD> \
   -e NODE_ROLE=worker \
   -e P2P_PORT=9527 \
+  -e BOOT_NODES=<HEAD_NODE_MULTIADDRESS> \
   -v /var/tmp/b7s/db:/var/tmp/b7s/db \
   -p 9527:9527 \
-  ghcr.io/blocklessnetwork/b7s:v0.0.25
+  ghcr.io/blocklessnetwork/b7s:v0.6.6.patch2
+```
+
+In order to pass in a private key to use with the worker:
+
+```bash
+docker run -d --name b7s \
+  -e NODE_ROLE=worker \
+  -e P2P_PORT=9527 \
+  -e BOOT_NODES=<HEAD_NODE_MULTIADDRESS> \
+  -e NODE_KEY_PATH=/app/worker/key.bin \
+  -v /path/to/private/key.bin:/app/worker/key.bin \
+  -v /var/tmp/b7s/db:/var/tmp/b7s/db \
 ```

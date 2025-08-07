@@ -23,6 +23,10 @@ sudo sh -c "wget https://raw.githubusercontent.com/blessnetwork/b7s/main/downloa
 
 You can also use Docker to install b7s. See the [Docker documentation](/docker/README.md) for more information.
 
+### Worker Node Installation
+
+In order to successfully run a worker node you must also install [BLS runtime](https://github.com/blessnetwork/bls-runtime).
+
 ## Usage
 
 For a more detailed overview of the node options and their meaning see [b7s-node Readme](/cmd/node/README.md#usage).
@@ -37,7 +41,7 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 | db                        | N/A        | "db"                    | Path to database used for persisting peer and function data.                            |
 | role                      | -r         | "worker"                | Role this node will have in the Bless protocol (head or worker).                    |
 | workspace                 | N/A        | "./workspace"           | Directory that the node will use for file storage.                                      |
-| concurrency               | -c         | node.DefaultConcurrency | Maximum number of requests the node will process in parallel.                           |
+| concurrency               | -c         | 10                      | Maximum number of requests the node will process in parallel.                           |
 | load-attributes           | N/A        | false                   | Load attributes from the environment.                                                   |
 | topics                    | N/A        | N/A                     | Topics that the node should subscribe to.                                                |
 
@@ -84,12 +88,21 @@ You can see an example YAML config file [here](/cmd/node/example.yaml).
 | enable-metrics            | N/A        | false                   | Enable metrics.                                                                         |
 | prometheus-address        | N/A        | N/A                     | Address where node should serve metrics (for head node this is the REST API address)    |
 
+
+
+## Private Key and Node Identity
+
+A Node is known by its Peer ID.
+Peer ID is an identifier that uniquely identifies a node in the network.
+Peer ID is derived from the nodes private key.
+
+To generate a private key for the node, use [keyforge](/cmd/keyforge/README.md).
+
 ## Dependencies
 
 b7s depends on the following repositories:
 
-- blessnetwork/runtime
-- blessnetwork/orchestration-chain
+- [BLS runtime](https://github.com/blessnetwork/bls-runtime)
 
 ## Architecture
 
