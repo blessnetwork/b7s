@@ -6,7 +6,7 @@
 
 # b7s daemon
 
-b7s is a peer-to-peer networking daemon for the bless network.
+b7s is a peer-to-peer networking daemon for the Bless network.
 It is supported on Windows, Linux, and MacOS platforms for both x64 and arm64 architectures.
 
 ## Installation
