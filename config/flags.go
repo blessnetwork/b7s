@@ -77,7 +77,7 @@ func getFlagFromTag(tag string) (string, string) {
 }
 
 // return mapping of CLI flag to the config path used by koanf. E.g. address => connectivity.address.
-// We don't have to enfore uniqueness of CLI flags as pflag does that for us.
+// We don't have to enforce uniqueness of CLI flags as pflag does that for us.
 func mapCLIFlagsToConfig(fields []ConfigOption) (map[string]string, error) {
 
 	flags := make(map[string]string)
