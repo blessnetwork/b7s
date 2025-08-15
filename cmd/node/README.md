@@ -115,7 +115,7 @@ $ ./node --db /tmp/db --log-level debug --port 9000 --role worker --runtime ~/.l
 ```
 
 The created `node` will listen on all addresses on TCP port 9000.
-Database used to persist Node data between runs will be created in the `/tmp/db` subdirectory.
+The database used to persist Node data between runs will be created in the `/tmp/db` subdirectory.
 
 Bless Runtime path is given as `/home/user/.local/bin`.
 At startup, node will check if the Bless Runtime is actually found there, namely the [bls-runtime](https://Bless.network/docs/protocol/runtime).
@@ -131,7 +131,7 @@ $ ./node --db /var/tmp/b7s/db --log-level debug --port 9002 -r head --workspace 
 ```
 
 The created `node` will listen on all addresses on TCP port 9002.
-Database used to persist Node peer and function data between runs will be created at `/var/tmp/b7s/db`.
+The database used to persist Node peer and function data between runs will be created at `/var/tmp/b7s/db`.
 
 Any transient files needed for node operation will be created in the `/var/tmp/b7s/workspace` directory.
 
