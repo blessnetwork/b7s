@@ -7,7 +7,7 @@ import (
 	"github.com/blessnetwork/b7s/models/bls"
 )
 
-// updateDeployment info will add some missing information to the deployment info,
+// updateDeploymentInfo will add some missing information to the deployment info,
 // based on the info found in the manifest URL.
 func updateDeploymentInfo(manifest *bls.FunctionManifest, manifestAddress string) error {
 
