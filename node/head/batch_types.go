@@ -34,12 +34,13 @@ func batchRecordToRequest(batch *batchstore.ExecuteBatchRecord, items []*batchst
 func requestToBatchRecord(id string, req request.ExecuteBatch) (*batchstore.ExecuteBatchRecord, []*batchstore.WorkItemRecord) {
 
 	batch := &batchstore.ExecuteBatchRecord{
-		ID:        id,
-		CID:       req.Template.FunctionID,
-		Method:    req.Template.Method,
-		Config:    req.Template.Config,
-		Status:    batchstore.StatusCreated,
-		CreatedAt: time.Now().UTC(),
+		ID:          id,
+		CID:         req.Template.FunctionID,
+		Method:      req.Template.Method,
+		Config:      req.Template.Config,
+		Status:      batchstore.StatusCreated,
+		MaxAttempts: req.MaxAttempts,
+		CreatedAt:   time.Now().UTC(),
 	}
 
 	items := make([]*batchstore.WorkItemRecord, len(req.Arguments))

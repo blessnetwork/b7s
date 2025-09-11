@@ -102,6 +102,9 @@ var (
 		},
 	}
 
+	GenericFunctionID     = "dummy-cid"
+	GenericFunctionMethod = "function.wasm"
+
 	GenericFunctionRecord = bls.FunctionRecord{
 		CID:      "dummy-cid",
 		URL:      fmt.Sprintf("https://example.com/%v", GenericString),

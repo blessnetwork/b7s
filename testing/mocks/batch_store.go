@@ -37,7 +37,7 @@ type BatchStore struct {
 
 // TODO: Add actual types to be returned, not nils
 
-func BaselineMockStore(t *testing.T) *BatchStore {
+func BaselineBatchStore(t *testing.T) *BatchStore {
 	t.Helper()
 
 	return &BatchStore{
