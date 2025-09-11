@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	"github.com/rs/zerolog"
 
 	"github.com/blessnetwork/b7s/telemetry/tracing"

@@ -5,29 +5,26 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-metrics"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
+	"github.com/blessnetwork/b7s/telemetry/b7ssemconv"
 )
-
-// TODO: Perhaps move this and keep it in a single place.
-type StrandResult struct {
-	FunctionInvocation string
-	Arguments          []string
-	Result             execute.Result
-	Metadata           any
-}
 
 func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req request.WorkOrderBatch) error {
 
+	w.Metrics().IncrCounterWithLabels(workOrderBatchesMetric, 1, []metrics.Label{{Name: "function", Value: req.Template.FunctionID}})
+
 	requestID := req.RequestID
-	strandID := req.StrandID
+	chunkID := req.ChunkID
 
 	log := w.Log().With().
 		Str("request", requestID).
-		Str("strand", strandID).
+		Str("chunk", chunkID).
 		Str("function", req.Template.FunctionID).
 		Logger()
 
@@ -36,20 +33,27 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 		Uint("concurrency", req.ConcurrencyLimit).
 		Msg("received a batch work order")
 
-	// TODO: Handle parallelism
+	ctx, span := w.Tracer().Start(ctx, spanWorkOrderBatch, trace.WithAttributes(
+		b7ssemconv.FunctionCID.String(req.Template.FunctionID),
+		b7ssemconv.FunctionMethod.String(req.Template.Method),
+		b7ssemconv.ExecutionNodeCount.Int(req.Template.Config.NodeCount),
+		b7ssemconv.ExecutionRequestID.String(requestID),
+	))
+	defer span.End()
+
+	// NOTE: We might want to execute these in parallel in the future
 
 	results := make(map[execute.RequestHash]*response.BatchFunctionResult)
 
 	for _, args := range req.Arguments {
 
-		// TODO: Fill this in.
 		er := execute.Request{
 			FunctionID: req.Template.FunctionID,
 			Method:     req.Template.Method,
 			Config:     req.Template.Config,
 			Arguments:  args,
 		}
-		_, result, err := w.execute(ctx, req.StrandID, time.Now(), er, from)
+		_, result, err := w.execute(ctx, req.ChunkID, time.Now(), er, from)
 		if err != nil {
 			log.Error().Err(err).Stringer("peer", from).Msg("execution failed")
 		}
@@ -59,9 +63,9 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 			log.Error().Err(err).Msg("could not get metadata from the execution result")
 		}
 
-		chunkID := execute.GetExecutionID(er)
+		chunkID := er.GetExecutionID()
 		results[chunkID] = &response.BatchFunctionResult{
-			FunctionInvocation: execute.FunctionInvocation(er),
+			FunctionInvocation: execute.FunctionInvocation(er.FunctionID, er.Method),
 			Arguments:          args,
 			NodeResult: execute.NodeResult{
 				Result:   result,
@@ -72,7 +76,7 @@ func (w *Worker) processWorkOrderBatch(ctx context.Context, from peer.ID, req re
 
 	res := response.WorkOrderBatch{
 		RequestID: req.RequestID,
-		StrandID:  req.StrandID,
+		ChunkID:   req.ChunkID,
 		Results:   results,
 	}
 	err := w.Send(ctx, from, res)

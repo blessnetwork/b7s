@@ -1,8 +1,6 @@
 package head
 
 import (
-	"fmt"
-
 	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/blessnetwork/b7s/models/request"
@@ -30,13 +28,13 @@ func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBa
 	assignments := make(map[peer.ID]*request.WorkOrderBatch)
 	for _, peer := range peers {
 
-		strandID := newStrandID(requestID)
-		assignments[peer] = req.WorkOrderBatch(requestID, strandID, a[peer]...)
+		chunkID := newChunkID()
+		assignments[peer] = req.WorkOrderBatch(requestID, chunkID, a[peer]...)
 	}
 
 	return assignments
 }
 
-func newStrandID(requestID string) string {
-	return fmt.Sprintf("%v:%v", requestID, newRequestID())
+func newChunkID() string {
+	return newUUID()
 }

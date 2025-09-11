@@ -1,18 +1,21 @@
 package worker
 
 import (
-	"github.com/armon/go-metrics/prometheus"
+	"github.com/hashicorp/go-metrics/prometheus"
 )
 
 // Tracing span names.
 const (
-	spanWorkOrder = "WorkOrder"
+	spanWorkOrder      = "WorkOrder"
+	spanWorkOrderBatch = "WorkOrderBatch"
+	spanExecute        = "Execute"
 )
 
 var (
 	rollCallsSeenMetric    = []string{"node", "rollcalls", "seen"}
 	rollCallsAppliedMetric = []string{"node", "rollcalls", "applied"}
 	workOrderMetric        = []string{"node", "workorders"}
+	workOrderBatchesMetric = []string{"node", "workorder_batches"}
 )
 
 var Counters = []prometheus.CounterDefinition{

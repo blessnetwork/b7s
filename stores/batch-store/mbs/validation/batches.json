@@ -1,0 +1,28 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": [
+            "id",
+            "cid",
+            "method"
+        ],
+        "properties": {
+            "id": {
+                "bsonType": "string",
+                "description": "b7s execution request ID"
+            },
+            "cid": {
+                "bsonType": "string",
+                "description": "IPFS CID of the b7s function to execute"
+            },
+            "method": {
+                "bsonType": "string",
+                "description": "Method of the b7s function to execute"
+            },
+            "status": {
+                "bsonType": "int",
+                "description": "status of this execution request"
+            }
+        }
+    }
+}

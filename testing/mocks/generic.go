@@ -13,6 +13,7 @@ import (
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
+	"github.com/blessnetwork/b7s/models/response"
 )
 
 // Global variables that can be used for testing. They are valid non-nil values for commonly needed types.
@@ -107,5 +108,48 @@ var (
 		Manifest: GenericManifest,
 		Archive:  "/var/tmp/archive.tar.gz",
 		Files:    "/var/tmp/files",
+	}
+
+	GenericBatchExecutionResult = &response.ExecuteBatch{
+		RequestID: GenericUUID.String(),
+		Code:      codes.OK,
+		Chunks: map[string]response.NodeChunkResults{
+			"generic-chunk-id-1": {
+				Peer: GenericPeerIDs[0],
+				Results: map[execute.RequestHash]*response.BatchFunctionResult{
+					"dummy-request-hash-1": {
+						NodeResult: execute.NodeResult{
+							Result: GenericExecutionResult,
+						},
+						FunctionInvocation: execute.FunctionInvocation(GenericExecutionRequest.FunctionID, GenericExecutionRequest.Method),
+						Arguments:          []string{"a", "b", "c"},
+					},
+				},
+			},
+			"generic-chunk-id-2": {
+				Peer: GenericPeerIDs[1],
+				Results: map[execute.RequestHash]*response.BatchFunctionResult{
+					"dummy-request-hash-2": {
+						NodeResult: execute.NodeResult{
+							Result: GenericExecutionResult,
+						},
+						FunctionInvocation: execute.FunctionInvocation(GenericExecutionRequest.FunctionID, GenericExecutionRequest.Method),
+						Arguments:          []string{"d", "e", "f"},
+					},
+				},
+			},
+			"generic-chunk-id-3": {
+				Peer: GenericPeerIDs[2],
+				Results: map[execute.RequestHash]*response.BatchFunctionResult{
+					"dummy-request-hash-3": {
+						NodeResult: execute.NodeResult{
+							Result: GenericExecutionResult,
+						},
+						FunctionInvocation: execute.FunctionInvocation(GenericExecutionRequest.FunctionID, GenericExecutionRequest.Method),
+						Arguments:          []string{"x", "y", "z"},
+					},
+				},
+			},
+		},
 	}
 )

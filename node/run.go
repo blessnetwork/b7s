@@ -8,7 +8,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"

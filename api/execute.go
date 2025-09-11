@@ -26,18 +26,22 @@ func (a *API) ExecuteFunction(ctx echo.Context) error {
 		Config:     req.Config,
 		FunctionID: req.FunctionId,
 		Method:     req.Method,
-		// TODO: Init arguments here, update API models.
+		Arguments:  req.Arguments,
 	}
 
-	var args []string
+	// Maintain backwards compatibility: if someone provided function arguments via the `parameters` field
+	// use them, but only if the current, newer field (arguments) was not used.
+	// In the future remove 'parameters' field.
+	if len(exr.Arguments) == 0 && len(req.Parameters) > 0 {
 
-	// Maintain backwards compatibility - if someone provided function arguments via the `parameters` field.
-	if len(req.Parameters) > 0 {
+		var args []string
 		for _, p := range req.Parameters {
 			args = append(args, p.Value)
+
 		}
+
+		exr.Arguments = args
 	}
-	exr.Arguments = args
 
 	err = exr.Valid()
 	if err != nil {

@@ -20,8 +20,9 @@ const (
 )
 
 const (
-	FunctionCID    = attribute.Key("function.cid")
-	FunctionMethod = attribute.Key("function.method")
+	FunctionCID       = attribute.Key("function.cid")
+	FunctionMethod    = attribute.Key("function.method")
+	FunctionArguments = attribute.Key("function.arguments")
 )
 
 const (

@@ -84,7 +84,6 @@ paths:
           description: Invalid execution request
         '500':
           description: Internal server error
-          
 
   /api/v1/functions/requests/result:
     post:
@@ -111,6 +110,30 @@ paths:
         '500':
           description: Internal server error
 
+  /api/v1/functions/execute/batch/result:
+    post:
+      tags:
+        - functions
+      summary: Get the result of a Batch Execution Request
+      description: Get the result of a Batch Execution Request
+      operationId: batchExecutionResult
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchResultRequest'
+        required: true
+      responses:
+        '200':
+          description: Batch Execution result retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchExecutionResult'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal server error
 
   /api/v1/functions/install:
     post:
@@ -158,9 +181,18 @@ components:
           example: hello-world.wasm
           description: Name of the WASM file to execute
           x-go-type-skip-optional-pointer: true
-        parameters:
+        arguments:
           type: array
           description: CLI arguments for the Bless Function
+          items:
+            type: string
+          example:
+            - [ "--arg", "first-invocation-argument",  "other arguments..." ]
+          x-go-type-skip-optional-pointer: true
+        parameters:
+          type: array
+          deprecated: true
+          x-deprecated-reason: Use the `arguments` field.
           items:
             $ref: '#/components/schemas/ExecutionParameter'
           example: 
@@ -545,7 +577,6 @@ components:
             - [ "--arg", "second-invocation-argument", "other arguments..." ]
             - [ "--arg", "third-invocation-argument",  "other arguments..." ]
           x-go-type-skip-optional-pointer: true
-       
 
     TemplateExecutionRequest:
       required:
@@ -567,8 +598,16 @@ components:
         config:
           $ref: '#/components/schemas/ExecutionConfig'
 
-
     BatchExecutionResponse:
+      type: object
+      properties:
+        request_id:
+          description: ID of the Execution Request
+          type: string
+          example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+          x-go-type-skip-optional-pointer: true
+
+    BatchExecutionResult:
       type: object
       properties:
         code:
@@ -585,15 +624,15 @@ components:
           description: If the Batch Execution Request failed, this message might have more info about the error
           type: string
           x-go-type-skip-optional-pointer: true
-        strands:
+        chunks:
           description: Results of the execution of the Batch Request, executed by different nodes
           x-go-type-skip-optional-pointer: true
           additionalProperties:
-            $ref: '#/components/schemas/StrandResults'
+            $ref: '#/components/schemas/ChunkResults'
 
-    StrandResults:
+    ChunkResults:
       type: object
-      x-go-type: response.NodeStrandResults
+      x-go-type: response.NodeChunkResults
       x-go-type-import:
         path: github.com/blessnetwork/b7s/models/response
       properties:
@@ -634,8 +673,15 @@ components:
           type: object
           x-go-type-skip-optional-pointer: true
 
-
-
-
-  
-    
+    BatchResultRequest:
+      description: Get the result of an Batch Execution Request, identified by the request ID
+      type: object
+      required:
+        - id
+      x-go-type-skip-optional-pointer: true
+      properties:
+        id:
+          description: ID of the Batch Execution Request
+          type: string
+          example: b6fbbc5e-1d16-4ea9-b557-51f4a6ab565c
+          x-go-type-skip-optional-pointer: true

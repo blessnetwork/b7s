@@ -5,11 +5,14 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/blessnetwork/b7s/models/bls"
 	"github.com/blessnetwork/b7s/models/codes"
 	"github.com/blessnetwork/b7s/models/execute"
 	"github.com/blessnetwork/b7s/models/request"
 	"github.com/blessnetwork/b7s/models/response"
+	batchstore "github.com/blessnetwork/b7s/stores/batch-store"
 )
 
 // ExecuteFunction can be used to start function execution. At the moment this is used by the API server to start execution on the head node.
@@ -25,7 +28,7 @@ func (h *HeadNode) ExecuteFunction(ctx context.Context, req execute.Request, sub
 	return code, requestID, results, cluster, nil
 }
 
-func (h *HeadNode) ExecuteFunctionBatch(ctx context.Context, req request.ExecuteBatch) (*response.ExecuteBatch, error) {
+func (h *HeadNode) StartFunctionBatchExecution(ctx context.Context, req request.ExecuteBatch) (string, error) {
 
 	requestID := newRequestID()
 
@@ -36,17 +39,20 @@ func (h *HeadNode) ExecuteFunctionBatch(ctx context.Context, req request.Execute
 
 	log.Info().Msg("processing batch execution request via API")
 
-	results, err := h.executeBatch(ctx, requestID, req)
+	// Persist batch and work items.
+	err := h.saveBatch(requestID, req)
 	if err != nil {
-		return nil, fmt.Errorf("could not execute batch request: %w", err)
+		return "", fmt.Errorf("could not save batch request: %w", err)
 	}
 
-	log.Info().Any("results", results).Msg("received batch responses")
+	go func() {
+		err := h.startBatchExecution(context.Background(), requestID, req)
+		if err != nil {
+			h.Log().Error().Err(err).Str("batch", requestID).Msg("could not execute batch")
+		}
+	}()
 
-	// TODO: Add actual status code.
-	res := req.Response(codes.OK, requestID).WithResults(results)
-
-	return res, nil
+	return requestID, nil
 }
 
 // ExecutionResult fetches the execution result from the node cache.
@@ -81,6 +87,75 @@ func (h *HeadNode) PublishFunctionInstall(ctx context.Context, uri string, cid s
 	}
 
 	return nil
+}
+
+func (h *HeadNode) GetBatchResults(ctx context.Context, id string) (*response.ExecuteBatch, error) {
+
+	batch, err := h.cfg.BatchStore.GetBatch(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve batch result: %w", err)
+	}
+
+	// We will need to group work items according to the group they belong to.
+	chunks, err := h.cfg.BatchStore.FindChunks(ctx, batch.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve chunks for batch: %w", err)
+	}
+
+	// Find all work items belonging to this batch.
+	items, err := h.cfg.BatchStore.FindWorkItems(ctx, batch.ID, "")
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve work items for batch: %w", err)
+	}
+
+	lookup := make(map[string]*batchstore.ChunkRecord)
+	for _, chunk := range chunks {
+		lookup[chunk.ID] = chunk
+	}
+
+	oc := make(map[string]response.NodeChunkResults)
+	for _, item := range items {
+
+		chunk, ok := lookup[item.ChunkID]
+		if !ok {
+			h.Log().Warn().Str("batch", batch.ID).Str("work_item", item.ID).Str("chunk", item.ChunkID).
+				Msg("chunk not found for work item")
+			continue
+		}
+
+		_, ok = oc[item.ChunkID]
+		if !ok {
+
+			id, err := peer.Decode(chunk.Worker)
+			if err != nil {
+				return nil, fmt.Errorf("invalid peer ID found (id: %s): %w", chunk.Worker, err)
+			}
+
+			oc[item.ChunkID] = response.NodeChunkResults{
+				Peer:    id,
+				Results: make(map[execute.RequestHash]*response.BatchFunctionResult),
+			}
+		}
+
+		hash := execute.ExecutionID(batch.CID, batch.Method, item.Arguments)
+		oc[item.ChunkID].Results[hash] = &response.BatchFunctionResult{
+			NodeResult: execute.NodeResult{
+				Result: execute.Result{Result: execute.RuntimeOutput{
+					Stdout: item.Output,
+				}},
+			},
+			FunctionInvocation: execute.FunctionInvocation(batch.CID, batch.Method),
+			Arguments:          item.Arguments,
+		}
+	}
+
+	out := &response.ExecuteBatch{
+		RequestID: id,
+		Code:      codes.OK, // TODO: Be more precise in this, not all executions are "OK".
+		Chunks:    oc,
+	}
+
+	return out, nil
 }
 
 // createInstallMessageFromURI creates a MsgInstallFunction from the given URI.
