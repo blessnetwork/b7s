@@ -31,6 +31,12 @@ func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBa
 	}
 
 	for _, peer := range peers {
+		// If we have more peers than items to execute - we could have peers without work.
+		// In this case skip them.
+		if len(a[peer]) == 0 {
+			continue
+		}
+
 		chunkID := newChunkID()
 		assignments[peer] = req.WorkOrderBatch(requestID, chunkID, a[peer]...)
 	}

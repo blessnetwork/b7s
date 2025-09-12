@@ -43,6 +43,9 @@ func TestHead_PartitionWork(t *testing.T) {
 
 		require.Equal(t, req.Template, woBatch.Template) // Work Order Batch must originate from our original request.
 
+		// We should not have chunks without work items.
+		require.NotEmpty(t, woBatch.Arguments)
+
 		// Accounting so we verify that we have saved all variants we put in.
 		argsFound = append(argsFound, woBatch.Arguments...)
 
@@ -90,7 +93,6 @@ func TestHead_PartitionWorkDistribution(t *testing.T) {
 			// Some workers don't get anything.
 			distribution: map[int]int{
 				1: 3,
-				0: 7,
 			},
 		},
 	}
@@ -107,6 +109,9 @@ func TestHead_PartitionWorkDistribution(t *testing.T) {
 
 			counts := make(map[int]int)
 			for peer, woBatch := range assignments {
+				// We should not have chunks without work items.
+				require.NotEmpty(t, woBatch.Arguments)
+
 				t.Logf("peer: %v items: %v", peer.String(), len(woBatch.Arguments))
 				counts[len(woBatch.Arguments)]++
 			}
