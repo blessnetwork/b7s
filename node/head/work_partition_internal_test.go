@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
 	"github.com/blessnetwork/b7s/models/execute"
@@ -53,6 +54,77 @@ func TestHead_PartitionWork(t *testing.T) {
 	// Each argument list from the batch should produce one work item.
 	// Make sure we have all of them assigned, but also have no more than we specified.
 	require.ElementsMatch(t, req.Arguments, argsFound)
+}
+
+func TestHead_PartitionWorkDistribution(t *testing.T) {
+
+	tests := []struct {
+		name         string
+		variants     int
+		peerCount    int
+		distribution map[int]int // Map chunk size to number of nodes that has chunk of that size.
+	}{
+		{
+			name:      "even split",
+			variants:  20,
+			peerCount: 4,
+			// Variants can be evenly split between nodes - each node should get five items.
+			distribution: map[int]int{
+				5: 4,
+			},
+		},
+		{
+			name:      "uneven split",
+			variants:  18,
+			peerCount: 5,
+			// Some nodes get more than others - three nodes will get 4 items, and the rest will get 3 each.
+			distribution: map[int]int{
+				4: 3,
+				3: 2,
+			},
+		},
+		{
+			name:      "more workers than items",
+			variants:  3,
+			peerCount: 10,
+			// Some workers don't get anything.
+			distribution: map[int]int{
+				1: 3,
+				0: 7,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			var (
+				peers = mocks.GenericPeerIDs[:test.peerCount]
+				req   = generateExecuteBatch(t, test.variants, 2)
+			)
+
+			assignments := partitionWorkBatch(peers, newRequestID(), req)
+
+			counts := make(map[int]int)
+			for peer, woBatch := range assignments {
+				t.Logf("peer: %v items: %v", peer.String(), len(woBatch.Arguments))
+				counts[len(woBatch.Arguments)]++
+			}
+
+			require.Equal(t, test.distribution, counts)
+		})
+	}
+}
+
+func TestHead_PartitionWorkHandlesErrors(t *testing.T) {
+
+	t.Run("empty peer list", func(t *testing.T) {
+
+		req := generateExecuteBatch(t, 1, 2)
+
+		assignments := partitionWorkBatch([]peer.ID{}, "dummy-request-id", req)
+		require.Empty(t, assignments)
+	})
 }
 
 func generateExecuteBatch(t *testing.T, itemCount int, arglen int) request.ExecuteBatch {

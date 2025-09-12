@@ -12,22 +12,25 @@ import (
 // In the future, we may have different criteria for what gets assigned to each peer. Right now we do round robin.
 func partitionWorkBatch(peers []peer.ID, requestID string, req request.ExecuteBatch) map[peer.ID]*request.WorkOrderBatch {
 
+	n := len(peers)
+	assignments := make(map[peer.ID]*request.WorkOrderBatch)
+
+	if n == 0 {
+		return assignments
+	}
+
 	variants := req.Arguments
 
 	// TODO: Do this in one go, not two maps.
 
 	// Assign arguments to a list of peers in a round robin fashion
-	n := len(peers)
 	a := make(map[peer.ID][][]string)
 	for i, args := range variants {
 		target := peers[i%n]
-
 		a[target] = append(a[target], args)
 	}
 
-	assignments := make(map[peer.ID]*request.WorkOrderBatch)
 	for _, peer := range peers {
-
 		chunkID := newChunkID()
 		assignments[peer] = req.WorkOrderBatch(requestID, chunkID, a[peer]...)
 	}
