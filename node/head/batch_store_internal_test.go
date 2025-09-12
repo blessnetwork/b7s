@@ -2,7 +2,6 @@ package head
 
 import (
 	"context"
-	"math/rand/v2"
 	"slices"
 	"strings"
 	"testing"
@@ -22,26 +21,7 @@ func TestHead_SaveBatch(t *testing.T) {
 		bs   = mocks.BaselineBatchStore(t)
 
 		batchID = newRequestID()
-		req     = request.ExecuteBatch{
-			Template: request.ExecutionRequestTemplate{
-				FunctionID: mocks.GenericFunctionID,
-				Method:     mocks.GenericFunctionMethod,
-				Config: execute.Config{
-					NodeCount: rand.Int(),
-					Environment: []execute.EnvVar{
-						{"env_var1", "val1"},
-						{"env_var2", "val2"},
-					},
-				},
-			},
-			Arguments: [][]string{
-				{"10", "11", "12"},
-				{"20", "21", "22"},
-				{"30", "31", "32"},
-				{"40", "41", "42"},
-			},
-			MaxAttempts: rand.Uint32(),
-		}
+		req     = generateExecuteBatch(t, 4, 3)
 	)
 
 	head.cfg.BatchStore = bs
