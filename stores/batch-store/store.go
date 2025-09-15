@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+// TODO: Perhaps update the code and use actual type for consts below.
 type Status int32
 
 const (
