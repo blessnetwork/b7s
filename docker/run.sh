@@ -99,7 +99,7 @@ fi
 
 
 if [ "$NODE_ROLE" = "head" ]; then
-  ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API $dialback_args $bootnode_args $wss_args $metrics_args
+  ./b7s --db /var/tmp/b7s/db --log-level debug --port $P2P_PORT --role head --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH --rest-api :$REST_API --disable-connection-limits --connection-count 500000 $dialback_args $bootnode_args $wss_args $metrics_args
 else
   ./b7s --db ./db --log-level debug --port $P2P_PORT --role worker --runtime-path /app/runtime --runtime-cli bls-runtime --workspace $WORKSPACE_ROOT --private-key $NODE_KEY_PATH $dialback_args $bootnode_args $wss_args $metrics_args
 fi
