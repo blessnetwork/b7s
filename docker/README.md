@@ -1,8 +1,7 @@
 ## Prerequisites
 
 - A machine running Docker
-- A valid AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY for an S3-compatible storage provider. This is used for backing up your node's keys and configuration.
-- A valid KEY_PATH and KEY_PASSWORD for your S3-compatible storage provider. This is used for backing up your node's keys and configuration.
+- A valid AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY for an S3-compatible storage provider, along with a KEY_PATH and KEY_PASSWORD. These credentials and settings are used to securely back up your node’s keys and configuration.
 
 ## Running the Image
 
