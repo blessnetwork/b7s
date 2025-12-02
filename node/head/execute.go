@@ -220,7 +220,7 @@ func peerRequestKey(requestID string, peer peer.ID) string {
 	return requestID + "/" + peer.String()
 }
 
-// helper function just for the sake of readibility.
+// helper function just for the sake of readability.
 func consensusRequired(c cons.Type) bool {
 	return c != 0
 }

@@ -12,7 +12,7 @@ const (
 	nameField = "module"
 )
 
-// Logger is a zerolog logger that fullfils the `go-hclog` Logger interface.
+// Logger is a zerolog logger that fulfils the `go-hclog` Logger interface.
 type Logger struct {
 	name   string
 	logger zerolog.Logger
