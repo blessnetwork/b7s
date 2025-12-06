@@ -62,7 +62,7 @@ func TestDetermineAddressProtocol(t *testing.T) {
 			shouldErr: true,
 		},
 		{
-			// Documenting that we do NOT support support certain things:
+			// Documenting that we do NOT support certain things:
 			//
 			// While the Domain Name System (DNS) technically supports arbitrary sequences of octets in domain name labels,
 			// the DNS standards recommend the use of the LDH (letter-digit-hyphen) subset of ASCII conventionally used for

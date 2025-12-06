@@ -63,7 +63,7 @@ func (c *core) Send(ctx context.Context, to peer.ID, msg bls.Message) error {
 	return nil
 }
 
-// sendToMany serializes the message and sends it to a number of peers. `requireAll` dictates how we treat partial errors.
+// SendToMany serializes the message and sends it to a number of peers. `requireAll` dictates how we treat partial errors.
 func (c *core) SendToMany(ctx context.Context, peers []peer.ID, msg bls.Message, requireAll bool) error {
 
 	opts := new(messageSpanConfig).pipeline(DirectMessagePipeline).peers(peers...).spanOpts()
