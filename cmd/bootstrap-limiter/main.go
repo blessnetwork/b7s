@@ -55,7 +55,7 @@ func run() int {
 
 	log.Default().SetFlags(0)
 
-	// We'll only target linux, though potentially cgroups may exist on some other systems.
+	// We'll only target Linux, though potentially cgroups may exist on some other systems.
 	if runtime.GOOS != "linux" {
 		log.Printf("OS not supported")
 		return failure
@@ -128,7 +128,7 @@ func run() int {
 	// Set permissions for required files.
 	for _, file := range requiredFiles {
 
-		// Make sure group has write permissions.
+		// Make sure the group has write permissions.
 		err = os.Chmod(file, rootCgroupFilePermissions)
 		if err != nil {
 			log.Printf("could not set permissions to group writable for %v", file)

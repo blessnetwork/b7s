@@ -109,7 +109,7 @@ type Metrics struct {
 	PrometheusAddress string `koanf:"prometheus-address" flag:"prometheus-address"`
 }
 
-// ConfigOptionInfo describes a specific configuration option, it's location in the config file and
+// ConfigOptionInfo describes a specific configuration option, its location in the config file and
 // corresponding CLI flags and environment variables. It can be used to generate documentation for the b7s node.
 type ConfigOptionInfo struct {
 	Name     string         `json:"name,omitempty"      yaml:"name,omitempty"`
@@ -182,7 +182,7 @@ func getFlagDescription(flag string) string {
 	case "tracing-http-endpoint":
 		return "tracing exporter HTTP endpoint"
 	case "prometheus-address":
-		return "address where prometheus metrics will be served"
+		return "address where Prometheus metrics will be served"
 	default:
 		return ""
 	}

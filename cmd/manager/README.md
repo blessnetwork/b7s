@@ -1,6 +1,6 @@
 # b7s-manager
 
-This is a libp2p agent that runs along side the main b7s assembly.
+This is a libp2p agent that runs alongside the main b7s assembly.
 
 ### Access Control
 

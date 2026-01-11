@@ -98,7 +98,7 @@ func cliFlagTranslate(mapping map[string]string, fs *pflag.FlagSet) func(*pflag.
 // - lowercase parts ("Dialback-Address" => "dialback-address")
 // - join back parts using the environment variable delimiter (underscore) ("Connectivity_DialbackAddress" => "connectivity_dialback-address")
 //
-// Koanf then uses the underscore to determine structure and in which section the config option belongs.
+// Koanf then uses the underscore to determine the structure and in which section the config option belongs.
 func envClean(key string, value string) (string, any) {
 
 	key = strings.TrimPrefix(key, bls.EnvPrefix)

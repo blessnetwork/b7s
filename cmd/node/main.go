@@ -66,7 +66,7 @@ func run() int {
 
 		// HTTP server will be created in two scenarios:
 		// - node is a head node (head node always has a REST API)
-		// - node has prometheus metrics enabled
+		// - node has Prometheus metrics enabled
 		needHTTPServer = nodeRole == bls.HeadNode || cfg.Telemetry.Metrics.Enable
 		server         *echo.Echo
 

@@ -109,7 +109,7 @@ paths:
 
 
 # Schema notes:
-# - all fields have a x-go-type-skip-optional-pointer - this is because otherwise all fields which arent required are generated as *string instead of a string
+# - all fields have a x-go-type-skip-optional-pointer - this is because otherwise all fields which aren't required are generated as *string instead of a string
 # - all types have a Go name explicitly set - this is to avoid inlined structs in certain scenarios
 
 components:
